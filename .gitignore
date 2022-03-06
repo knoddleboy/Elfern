@@ -21,6 +21,7 @@ pids
 
 # Compiled binary
 build/
+dist
 
 # Dependency directories
 node_modules/
@@ -49,4 +50,3 @@ typings/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
