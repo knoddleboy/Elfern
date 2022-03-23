@@ -4,7 +4,7 @@ import { TitlebarButtons } from "@utils/TitlebarButtons";
 
 import TitlebarIcon from "./TitlebarIcon";
 import TitlebarTitle from "./TitlebarTitle";
-import Button from "../CustomButton";
+import CustomButton from "../CustomButton";
 
 import HorizontalRuleRoundedIcon from "@mui/icons-material/HorizontalRuleRounded";
 import CropSquareIcon from "@mui/icons-material/CropSquare";
@@ -23,26 +23,26 @@ const Titlebar: React.FC = () => {
                 <TitlebarTitle />
             </div>
             <div className="absolute h-full top-0 right-0 flex justify-between">
-                <Button
+                <CustomButton
                     styles={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={TitlebarButtons.minimizeApp}
                 >
                     <HorizontalRuleRoundedIcon
                         sx={{ color: ToggleIconColor, fontSize: 16, marginTop: "8px" }}
                     />
-                </Button>
-                <Button
+                </CustomButton>
+                <CustomButton
                     styles={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={TitlebarButtons.maximizeRestoreApp}
                 >
                     <CropSquareIcon sx={{ color: ToggleIconColor, fontSize: 15 }} />
-                </Button>
-                <Button
+                </CustomButton>
+                <CustomButton
                     styles={`${ButtonStyles} hover:bg-[#cf0e1e]`}
                     onClick={TitlebarButtons.closeApp}
                 >
                     <CloseRoundedIcon sx={{ color: ToggleIconColor, fontSize: 17 }} />
-                </Button>
+                </CustomButton>
             </div>
         </div>
     );

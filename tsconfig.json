@@ -34,6 +34,7 @@
             "@root/*": ["../*"],
             "@src/*": ["./*"],
             "@assets/*": ["./assets/*"],
+            "@components/*": ["./components/*"],
             "@utils/*": ["./utils/*"],
             "@data/*": ["./assets/data/*"]
         } /* Specify a set of entries that re-map imports to additional lookup locations. */,

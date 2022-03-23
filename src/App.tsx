@@ -17,12 +17,14 @@ const App: React.FC = () => {
                 className="App w-full bg-green-primary overflow-hidden"
                 style={{ height: "calc(100vh - 1.5rem)" }}
             >
+                {modalState && (
+                    <Modal
+                        isOpen={modalState}
+                        toggleModal={setModalState}
+                        displayData={readFile("src/assets/data/rules.md")}
+                    />
+                )}
                 <RulesSection toggleModal={setModalState} />
-                <Modal
-                    active={modalState}
-                    toggleModal={setModalState}
-                    displayData={readFile("src/assets/data/rules.md")}
-                />
             </div>
         </React.Fragment>
     );

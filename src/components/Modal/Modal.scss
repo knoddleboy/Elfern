@@ -5,57 +5,106 @@
     animation-fill-mode: forwards;
 }
 
-.show {
-    .acrylic-bg {
-        @keyframes show-modal-bg {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
+$blur-spread: 6px;
 
-        @include animation(show-modal-bg, 0.1s, linear);
+/* MODAL BACKGROUND PRE-FADE-STYLES */
 
+.acrylic-bg {
+    $anim-time: 0.15s;
+    $anim-type: linear;
+
+    // Background blur
+    &::before {
+        content: "";
         width: 100%;
         height: 100%;
         position: absolute;
         top: 0;
         left: 0;
-        backdrop-filter: blur(6px);
+        backdrop-filter: blur($blur-spread) opacity(0);
+        transition: backdrop-filter $anim-time $anim-type;
         z-index: -2;
+    }
+
+    // Noise texture
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity $anim-time $anim-type;
+        background: #000 url("../../assets/images/noise.png");
+        z-index: -1;
+    }
+}
+
+/* MODAL CONTENT PRE-FADE-STYLES */
+
+.modal-content {
+    transform: scale(0.9);
+}
+
+/* MODAL FADE IN EVENT */
+
+.fade-in {
+    .acrylic-bg {
+        &::before {
+            backdrop-filter: blur($blur-spread) opacity(1);
+        }
 
         &::after {
-            content: "";
-            position: absolute;
-            inset: 0;
             opacity: 0.5;
-            background: #000 url("../../assets/images/noise.png");
-            z-index: -1;
         }
     }
 
-    .content-wrapper {
-        @keyframes show-modal {
-            from {
+    .modal-content {
+        @keyframes bounce-in {
+            0% {
                 transform: scale(0.9);
             }
-
-            to {
+            50% {
+                transform: scale(1.01);
+            }
+            100% {
                 transform: scale(1);
             }
         }
 
-        @include animation(show-modal, 0.3s, cubic-bezier(0.5, 0, 0.3, 1.35));
+        @include animation(bounce-in, 0.3s, ease);
     }
 }
 
-.hide {
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
+/* MODAL FADE IN EVENT */
+
+.fade-out {
+    transition: all 0.3s ease !important;
+
+    .acrylic-bg {
+        &::before {
+            backdrop-filter: blur($blur-spread) opacity(0);
+        }
+
+        &::after {
+            opacity: 0;
+        }
+    }
+
+    .modal-content {
+        @keyframes scale-out {
+            from {
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+        }
+
+        @include animation(scale-out, 0.3s, ease);
+    }
 }
+
+/* SCROLL BAR */
 
 .simplebar-wrapper {
     width: calc(100% + 1rem);
@@ -93,6 +142,8 @@
     }
 }
 
+/* PARSED CONTENT */
+
 .inserted-content {
     * {
         color: #323232 !important;
@@ -127,5 +178,17 @@
 
     strong {
         font-weight: 540;
+    }
+}
+
+/* CLOSE BUTTON */
+
+.modal-close {
+    color: rgba(50, 50, 50, 0.5);
+    transition: transform 0.2s ease;
+
+    &:hover {
+        color: rgba(50, 50, 50, 0.8);
+        transform: scale(1.2);
     }
 }

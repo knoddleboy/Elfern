@@ -1,8 +1,8 @@
 import React from "react";
 
-import { CustomButtonProps } from "@src/types";
+import { ICustomButtonProps } from "@src/types";
 
-const Button: React.FC<CustomButtonProps> = ({ children, styles, ...otherProps }) => {
+const CustomButton: React.FC<ICustomButtonProps> = ({ children, styles, ...otherProps }) => {
     return (
         <button className={`btn ${styles}`} {...otherProps}>
             {children}
@@ -10,4 +10,4 @@ const Button: React.FC<CustomButtonProps> = ({ children, styles, ...otherProps }
     );
 };
 
-export default Button;
+export default CustomButton;
