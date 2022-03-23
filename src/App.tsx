@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import readFile from "@utils/readFile";
 
-import Titlebar from "./components/Titlebar";
-import RulesSection from "./components/RulesSection";
-import Modal from "./components/Modal";
+import Titlebar from "@components/Titlebar";
+import RulesSection from "@components/RulesSection";
+import Modal from "@components/Modal";
+import Settings from "@components/Settings";
 
 import "./App.scss";
 
@@ -25,6 +26,7 @@ const App: React.FC = () => {
                     />
                 )}
                 <RulesSection toggleModal={setModalState} />
+                <Settings />
             </div>
         </React.Fragment>
     );
