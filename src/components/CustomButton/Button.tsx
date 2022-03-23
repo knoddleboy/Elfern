@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CustomButtonProps } from "@default_types/types";
+import { CustomButtonProps } from "@src/types";
 
 const Button: React.FC<CustomButtonProps> = ({ children, styles, ...otherProps }) => {
     return (

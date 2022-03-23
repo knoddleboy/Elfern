@@ -1,34 +1,61 @@
-.acrylic-bg::before {
-    content: "";
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    backdrop-filter: blur(8px);
-    z-index: -2;
+@mixin animation($name, $duration, $timing-func) {
+    animation-name: $name;
+    animation-duration: $duration;
+    animation-timing-function: $timing-func;
+    animation-fill-mode: forwards;
 }
 
-.acrylic-bg::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: 0.5;
-    background: #000 url("../../assets/images/noise.png");
-    z-index: -1;
+.show {
+    .acrylic-bg {
+        @keyframes show-modal-bg {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @include animation(show-modal-bg, 0.1s, linear);
+
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        backdrop-filter: blur(6px);
+        z-index: -2;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.5;
+            background: #000 url("../../assets/images/noise.png");
+            z-index: -1;
+        }
+    }
+
+    .content-wrapper {
+        @keyframes show-modal {
+            from {
+                transform: scale(0.9);
+            }
+
+            to {
+                transform: scale(1);
+            }
+        }
+
+        @include animation(show-modal, 0.3s, cubic-bezier(0.5, 0, 0.3, 1.35));
+    }
 }
 
-// .content-wrapper {
-// }
-
-// #edge-scroll-trigger {
-//     width: 0.5rem;
-//     height: 100%;
-//     position: absolute;
-//     top: 0;
-//     right: 0;
-//     border-radius: 0 7px 7px 0;
-// }
+.hide {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
 
 .simplebar-wrapper {
     width: calc(100% + 1rem);
@@ -67,7 +94,38 @@
 }
 
 .inserted-content {
-    p {
-        margin: 10px 0 10px 0;
+    * {
+        color: #323232 !important;
+    }
+
+    font-family: "Rubik", sans-serif;
+
+    h1,
+    h2,
+    h3 {
+        font-family: "Germania One", cursive;
+    }
+
+    h1 {
+        margin: auto;
+        width: 50%;
+        text-align: center;
+        letter-spacing: 2px;
+    }
+
+    blockquote {
+        * {
+            color: #505050 !important;
+        }
+
+        font-weight: 430;
+    }
+
+    hr {
+        margin-bottom: 2em;
+    }
+
+    strong {
+        font-weight: 540;
     }
 }
