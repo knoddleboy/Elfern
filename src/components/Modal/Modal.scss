@@ -5,7 +5,7 @@
     animation-fill-mode: forwards;
 }
 
-$blur-spread: 6px;
+$blur-spread: 10px;
 
 /* MODAL BACKGROUND PRE-FADE-STYLES */
 
@@ -42,6 +42,9 @@ $blur-spread: 6px;
 
 .modal-content {
     transform: scale(0.9);
+    opacity: 0;
+
+    box-shadow: 0px 30px 90px rgba(0, 0, 0, 0.3);
 }
 
 /* MODAL FADE IN EVENT */
@@ -61,12 +64,15 @@ $blur-spread: 6px;
         @keyframes bounce-in {
             0% {
                 transform: scale(0.9);
+                opacity: 0;
             }
             50% {
                 transform: scale(1.01);
+                opacity: 1;
             }
             100% {
                 transform: scale(1);
+                opacity: 1;
             }
         }
 
@@ -92,6 +98,7 @@ $blur-spread: 6px;
     .modal-content {
         @keyframes scale-out {
             from {
+                opacity: 1;
                 transform: scale(1);
             }
             to {
@@ -162,6 +169,12 @@ $blur-spread: 6px;
         width: 50%;
         text-align: center;
         letter-spacing: 2px;
+
+        &:first-letter {
+            font-family: "English Towne", cursive;
+            font-size: 2.6rem;
+            letter-spacing: 3px;
+        }
     }
 
     blockquote {
@@ -185,10 +198,9 @@ $blur-spread: 6px;
 
 .modal-close {
     color: rgba(50, 50, 50, 0.5);
-    transition: transform 0.2s ease;
+    transition: color 0.1s linear;
 
     &:hover {
         color: rgba(50, 50, 50, 0.8);
-        transform: scale(1.2);
     }
 }
