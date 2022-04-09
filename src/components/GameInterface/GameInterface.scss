@@ -1,0 +1,40 @@
+@import "../../shared/mixins/sass-mixins.scss";
+
+.interface--in-animation {
+    @keyframes interface-in {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    @include forward-animation(interface-in, 0.3s, linear);
+}
+
+.stock--in-animation {
+    @for $i from 1 to 34 {
+        #card-container:nth-child(#{$i}) {
+            @keyframes stock-in {
+                0% {
+                    top: 46%;
+                    left: 20%;
+                    opacity: 0;
+                }
+                100% {
+                    left: 50%;
+                    opacity: 1;
+                }
+            }
+
+            @include none-fill-animation(stock-in, 0.5s, cubic-bezier(0.29, 0.1, 0.34, 0.99));
+            animation-delay: #{$i * 0.003}s;
+        }
+    }
+}
+
+#Stock__underlay {
+    font-size: 5vw;
+    font-family: "English Towne";
+}
