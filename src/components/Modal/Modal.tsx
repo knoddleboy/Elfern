@@ -74,7 +74,7 @@ class Modal extends React.Component<IModalProps, IModalState> {
     render() {
         return ReactDOM.createPortal(
             <div
-                className={`fade-${this.state.fadeType} fixed z-1300 inset-0 top-6 flex items-center justify-center`}
+                className={`fade-${this.state.fadeType} fixed z-[1200] inset-0 top-6 flex items-center justify-center`}
             >
                 <div
                     className="acrylic-bg fixed -z-1 inset-0 top-6"
