@@ -1,0 +1,5 @@
+#card-container {
+    display: flex;
+    flex-direction: column;
+    transition: top 500ms ease, left 500ms ease, transform 150ms ease;
+}
