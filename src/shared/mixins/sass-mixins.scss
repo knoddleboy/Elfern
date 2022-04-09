@@ -1,0 +1,14 @@
+/* Defines css animation with provided properties and default forward fill mode */
+@mixin forward-animation($name, $duration, $timing-func) {
+    animation-name: $name;
+    animation-duration: $duration;
+    animation-timing-function: $timing-func;
+    animation-fill-mode: forwards;
+}
+
+@mixin none-fill-animation($name, $duration, $timing-func) {
+    animation-name: $name;
+    animation-duration: $duration;
+    animation-timing-function: $timing-func;
+    animation-fill-mode: none;
+}
