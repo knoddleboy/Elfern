@@ -9,15 +9,16 @@ const createWindow = () => {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        minWidth: 800,
-        minHeight: 600,
+        minWidth: 640,
+        minHeight: 480,
+        center: true,
+        frame: false,
+        icon: path.join(__dirname, "./favicon.ico"),
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModules: true,
             contextIsolation: false, // Get access to IPC
+            enableRemoteModules: true,
         },
-        icon: path.join(__dirname, "./favicon.ico"),
-        frame: false,
     });
 
     // Load the index.html of the app.
@@ -26,19 +27,28 @@ const createWindow = () => {
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
 
-    ipcMain.on("minimize-app", (e) => {
+    ipcMain.on("minimize-app", () => {
         mainWindow.minimize();
     });
 
-    ipcMain.on("maximize-restore-app", (e) => {
+    ipcMain.on("maximize-restore-app", () => {
         if (mainWindow.isMaximized()) {
             mainWindow.restore();
-        } else {
-            mainWindow.maximize();
+            return;
         }
+
+        mainWindow.maximize();
     });
 
-    ipcMain.on("close-app", (e) => {
+    mainWindow.on("maximize", () => {
+        mainWindow.webContents.send("window-maximized");
+    });
+
+    mainWindow.on("unmaximize", () => {
+        mainWindow.webContents.send("window-restored");
+    });
+
+    ipcMain.on("close-app", () => {
         mainWindow.close();
     });
 };
