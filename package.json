@@ -58,7 +58,7 @@
         "autoprefixer": "^10.4.2",
         "concurrently": "^7.0.0",
         "cross-env": "^7.0.3",
-        "electron": "^17.1.0",
+        "electron": "^18.0.1",
         "node-polyfill-webpack-plugin": "^1.1.4",
         "node-sass": "^7.0.1",
         "path-browserify": "^1.0.1",
