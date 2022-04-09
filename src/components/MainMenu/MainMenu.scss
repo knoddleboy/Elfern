@@ -1,0 +1,148 @@
+@import "../../shared/mixins/sass-mixins.scss";
+
+// Play button :hover and :active animations
+.PlayButton {
+    position: relative;
+    display: inline-block;
+    transform-style: preserve-3d;
+    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1),
+        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    // 3D shadow
+    &::before {
+        content: "";
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        border-radius: inherit;
+        background-color: #005382;
+        transform: translate3d(0, 10%, -1em);
+        transition: transform 150ms cubic-bezier(0, 0, 0.58, 1),
+            background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    &:hover {
+        &:before {
+            background-color: #0072b3;
+        }
+    }
+
+    &:active {
+        transform: translateY(10%);
+
+        &::before {
+            transform: translate3d(0, 0, -1em);
+        }
+    }
+}
+
+// Animation that starts when play button is clicked
+.menu-out-animation {
+    // Start menu scale & fade out
+    @keyframes menu-out {
+        from {
+            opacity: 1;
+            transform: scale(1);
+        }
+        20% {
+            opacity: 1;
+        }
+        80% {
+            opacity: 0;
+        }
+        to {
+            opacity: 0;
+            transform: scale(1.5);
+        }
+    }
+
+    @include forward-animation(menu-out, 1s, ease-out-circ);
+    animation-delay: 0.38s;
+
+    // Set delay on each card
+    #card-container {
+        $delay: 0.05;
+        @for $i from 1 through 3 {
+            &:nth-child(#{$i}n) {
+                animation-delay: #{(3 - $i) * $delay}s;
+            }
+        }
+    }
+
+    @mixin cards-out-animation($side, $degrees-list) {
+        // NOTE: the number of cards mast match the number of degrees in $degrees-list
+
+        @for $i from 1 through length($degrees-list) {
+            // For each child (card) apply animation
+            #card-container:nth-child(#{$i}) {
+                @keyframes #{$side}-cards-out {
+                    30% {
+                        transform: rotate(#{nth($degrees-list, $i) + 5}deg) translateX(5%);
+                    }
+                    100% {
+                        transform: rotate(#{nth($degrees-list, $i) - 60}deg) translateX(-50%);
+                    }
+                }
+                @include forward-animation(#{$side}-cards-out, 1s, ease-out-circ);
+            }
+        }
+    }
+
+    // Left hand side cards fade out animation
+    .left-cards {
+        $degrees: 60 70 90;
+        @include cards-out-animation(left, $degrees);
+    }
+
+    // Right hand side cards fade out animation
+    .right-cards {
+        $degrees: -120 -110 -90;
+        @include cards-out-animation(right, $degrees);
+    }
+
+    // ------- BACKUP ------- //
+
+    // Left hand side cards fade out animation
+    // .left-cards {
+    //     $degrees: 60 70 90;
+
+    //     @for $i from 1 through 3 {
+    //         #card-container:nth-child(#{$i}) {
+    //             @keyframes left-cards-out {
+    //                 30% {
+    //                     transform: rotate(#{nth($degrees, $i) + 5}deg) translateX(5%);
+    //                 }
+    //                 100% {
+    //                     transform: rotate(#{nth($degrees, $i) - 60}deg) translateX(-50%);
+    //                 }
+    //             }
+
+    //             @include forward-animation(left-cards-out, 1s, ease-out-circ);
+    //         }
+    //     }
+    // }
+
+    // Right hand side cards fade out animation
+    // .right-cards {
+    //     $degrees: -120 -110 -90;
+
+    //     @for $i from 1 through 3 {
+    //         #card-container:nth-child(#{$i}) {
+    //             @keyframes right-cards-out {
+    //                 30% {
+    //                     transform: rotate(#{nth($degrees, $i) + 5}deg) translateX(5%);
+    //                 }
+    //                 100% {
+    //                     transform: rotate(#{nth($degrees, $i) - 60}deg) translateX(-50%);
+    //                 }
+    //             }
+
+    //             @include forward-animation(right-cards-out, 1s, ease-out-circ);
+    //         }
+    //     }
+    // }
+}
