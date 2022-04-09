@@ -2,23 +2,21 @@ import React, { useState } from "react";
 import readFile from "@utils/readFile";
 
 import Titlebar from "@components/Titlebar";
-import RulesSection from "@components/RulesSection";
 import Modal from "@components/Modal";
-import StartMenu from "@components/StartMenu";
-import Settings from "@components/Settings";
+import Sidebar from "@components/Sidebar";
+import MainMenu from "@src/components/MainMenu";
+import GameInterface from "@components/GameInterface";
 
 import "./App.scss";
 
 const App: React.FC = () => {
     const [modalState, setModalState] = useState(false);
+    const [mainMenuIsRendered, setMainMenuRenderState] = useState(true);
 
     return (
         <React.Fragment>
             <Titlebar />
-            <div
-                className="App w-full bg-green-primary overflow-hidden"
-                style={{ height: "calc(100vh - 1.5rem)" }}
-            >
+            <div className="App w-full h-[calc(100vh-1.5rem)] bg-green-primary overflow-hidden">
                 {modalState && (
                     <Modal
                         isOpen={modalState}
@@ -26,9 +24,12 @@ const App: React.FC = () => {
                         displayData={readFile("src/assets/data/rules.md")}
                     />
                 )}
-                <RulesSection toggleModal={setModalState} />
-                <StartMenu />
-                <Settings />
+                {mainMenuIsRendered ? (
+                    <MainMenu render={setMainMenuRenderState} />
+                ) : (
+                    <GameInterface />
+                )}
+                <Sidebar toggleModal={setModalState} />
             </div>
         </React.Fragment>
     );
