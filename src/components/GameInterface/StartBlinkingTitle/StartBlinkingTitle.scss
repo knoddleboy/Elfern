@@ -1,0 +1,15 @@
+.start-blinking-title {
+    @keyframes text-blink {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.2;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    animation: text-blink 7s ease-in-out 1s infinite;
+}
