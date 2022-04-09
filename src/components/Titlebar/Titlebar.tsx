@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { ipcRenderer } from "electron";
 
 import { TitlebarButtons } from "@utils/TitlebarButtons";
 
@@ -6,15 +7,23 @@ import TitlebarIcon from "./TitlebarIcon";
 import TitlebarTitle from "./TitlebarTitle";
 import CustomButton from "../CustomButton";
 
-import HorizontalRuleRoundedIcon from "@mui/icons-material/HorizontalRuleRounded";
-import CropSquareIcon from "@mui/icons-material/CropSquare";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { default as MinimizeWindow } from "@mui/icons-material/HorizontalRuleRounded";
+import { default as MaximizeWindow } from "@mui/icons-material/CropSquare";
+import { default as CloseWindow } from "@mui/icons-material/CloseRounded";
+import { default as RestoreWindow } from "@mui/icons-material/FilterNoneRounded";
 
 import "./Titlebar.scss";
 
 const Titlebar: React.FC = () => {
     const ToggleIconColor = "#e1e2e1";
     const ButtonStyles = "flex items-center justify-center w-9 cursor-auto";
+
+    const [windowState, setWindowState] = useState(false);
+
+    useEffect(() => {
+        ipcRenderer.on("window-maximized", () => setWindowState((prevState) => !prevState));
+        ipcRenderer.on("window-restored", () => setWindowState((prevState) => !prevState));
+    }, []);
 
     return (
         <div className="Titlebar w-full h-6 bg-dark-800 relative">
@@ -24,24 +33,34 @@ const Titlebar: React.FC = () => {
             </div>
             <div className="absolute h-full top-0 right-0 flex justify-between">
                 <CustomButton
-                    styles={`${ButtonStyles} hover:bg-dark-600`}
+                    className={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={TitlebarButtons.minimizeApp}
                 >
-                    <HorizontalRuleRoundedIcon
+                    <MinimizeWindow
                         sx={{ color: ToggleIconColor, fontSize: 16, marginTop: "8px" }}
                     />
                 </CustomButton>
                 <CustomButton
-                    styles={`${ButtonStyles} hover:bg-dark-600`}
+                    className={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={TitlebarButtons.maximizeRestoreApp}
                 >
-                    <CropSquareIcon sx={{ color: ToggleIconColor, fontSize: 15 }} />
+                    {windowState ? (
+                        <RestoreWindow
+                            sx={{
+                                color: ToggleIconColor,
+                                fontSize: 12,
+                                transform: "rotate(180deg)",
+                            }}
+                        />
+                    ) : (
+                        <MaximizeWindow sx={{ color: ToggleIconColor, fontSize: 15 }} />
+                    )}
                 </CustomButton>
                 <CustomButton
-                    styles={`${ButtonStyles} hover:bg-[#cf0e1e]`}
+                    className={`${ButtonStyles} hover:bg-[#cf0e1e]`}
                     onClick={TitlebarButtons.closeApp}
                 >
-                    <CloseRoundedIcon sx={{ color: ToggleIconColor, fontSize: 17 }} />
+                    <CloseWindow sx={{ color: ToggleIconColor, fontSize: 17 }} />
                 </CustomButton>
             </div>
         </div>
