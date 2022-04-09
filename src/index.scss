@@ -34,3 +34,19 @@
     user-select: none;
     -webkit-user-select: none;
 }
+
+// Change default outline color
+div,
+button,
+span {
+    outline: none;
+    &:focus-visible {
+        outline: 2px solid #16161d !important;
+    }
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
