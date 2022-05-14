@@ -2,51 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-    font-family: "Rubik";
-    src: url("./assets/fonts/Rubik/Rubik-VariableFont_wght.ttf") format("truetype");
-    font-style: normal;
-    font-weight: 100 1000;
-    font-stretch: 25% 151%;
+:root {
+    /* WHITE */
+    --white-normal: #ffffff;
+    --white-text: #e2f1ff;
+    --white-greyish: #e1e2e1;
+    --white-yellowish: #fff3e4;
+
+    /* BLACK */
+    --dark-800: #313131;
+    --dark-600: #4a4c50;
+
+    /* GREEN */
+    --green-800: #006717; // dark
+    --green-500: #329e47; // primary
+    --green-400: #5bb16c; // 400
+    --green-300: #2b7b3b; // light
+    --green-200-alpha: rgba(43, 123, 59, 0.3); // 200
+
+    /* BLUE */
+    --blue-700: #005382;
+    --blue-600: #0072b3;
+    --blue-500: #0077b9;
+    --blue-400: #1a88c4;
+    --blue-300: #66add5;
+
+    /* ALPHA */
+    --alpha-5: rgba(0, 0, 0, 0.5);
 }
 
-@font-face {
-    font-family: "Rubik";
-    src: url("./assets/fonts/Rubik/Rubik-Italic-VariableFont_wght.ttf") format("truetype");
-    font-style: italic;
-    font-weight: 100 1000;
-    font-stretch: 25% 151%;
-}
+@layer base {
+    @font-face {
+        font-family: "Rubik";
+        src: url("./assets/fonts/Rubik/Rubik-VariableFont_wght.ttf") format("truetype");
+        font-style: normal;
+        font-weight: 100 1000;
+        font-stretch: 25% 151%;
+    }
 
-@font-face {
-    font-family: "Germania One";
-    src: url("./assets/fonts/Germania_One/GermaniaOne-Regular.ttf") format("truetype");
-    font-style: normal;
-}
+    @font-face {
+        font-family: "Rubik";
+        src: url("./assets/fonts/Rubik/Rubik-Italic-VariableFont_wght.ttf") format("truetype");
+        font-style: italic;
+        font-weight: 100 1000;
+        font-stretch: 25% 151%;
+    }
 
-@font-face {
-    font-family: "English Towne";
-    src: url("./assets/fonts/English_Towne/EnglishTowne.ttf") format("truetype");
-    font-style: normal;
-}
+    @font-face {
+        font-family: "Germania One";
+        src: url("./assets/fonts/Germania_One/GermaniaOne-Regular.ttf") format("truetype");
+        font-style: normal;
+    }
 
-* {
-    user-select: none;
-    -webkit-user-select: none;
-}
+    @font-face {
+        font-family: "English Towne";
+        src: url("./assets/fonts/English_Towne/EnglishTowne.ttf") format("truetype");
+        font-style: normal;
+    }
 
-// Change default outline color
-div,
-button,
-span {
-    outline: none;
-    &:focus-visible {
-        outline: 2px solid #16161d !important;
+    * {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    h1 {
+        @apply text-xl font-bold md:text-2xl xl:text-3xl;
+    }
+
+    // Change default outline color
+    div,
+    button,
+    span {
+        outline: none;
+        &:focus-visible {
+            outline: 2px solid #16161d !important;
+        }
+    }
+
+    .App,
+    #modal-root {
+        font-family: "Rubik", sans-serif;
     }
 }
 
-.flex-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+@layer utilities {
+    .flex-center {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .absolute-centering {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .font-english-towne {
+        font-family: "English Towne";
+    }
+
+    .text-base-adapt {
+        @apply text-base font-normal lg:text-lg;
+    }
+
+    .text-sm-adapt {
+        @apply text-sm font-normal lg:text-base;
+    }
 }
