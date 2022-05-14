@@ -1,15 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 
 import CustomButton from "@components/CustomButton";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import SettingsMenu from "@components/SettingsMenu";
 
-const SettingsButton: React.FC = () => (
-    <CustomButton className="mt-auto" onClick={() => alert("Settings...")}>
-        <SettingsRoundedIcon
-            className="text-green-dark hover:brightness-[.5] hover:rotate-12"
-            sx={{ fontSize: 32, filter: "brightness(70%)", transition: "all 100ms linear" }}
-        />
-    </CustomButton>
-);
+import "./SettingsButton.scss";
+
+const SettingsButton: React.FC<{ tabIndex?: number }> = ({ tabIndex }) => {
+    const [settingsMenuState, setSettingsMenuState] = useState(false);
+
+    return (
+        <React.Fragment>
+            {settingsMenuState && (
+                <SettingsMenu isOpen={settingsMenuState} toggler={setSettingsMenuState} />
+            )}
+            <CustomButton
+                className="mt-auto"
+                onClick={() => setSettingsMenuState((prevState) => !prevState)}
+                tabIndex={tabIndex}
+            >
+                <SettingsRoundedIcon
+                    className="SettingsButton text-green-800 hover:brightness-[60%] hover:rotate-12"
+                    sx={{ fontSize: 32, filter: "brightness(75%)" }}
+                />
+            </CustomButton>
+        </React.Fragment>
+    );
+};
 
 export default SettingsButton;
