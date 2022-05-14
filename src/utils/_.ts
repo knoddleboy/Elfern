@@ -48,4 +48,28 @@ export default class _ {
         }
         return array[array.length + index];
     }
+
+    static remove<T>(array: Array<T>, item: T): Array<T> {
+        const itmIdx = array.indexOf(item);
+        if (itmIdx > -1) {
+            array.splice(itmIdx, 1);
+        }
+        return array;
+    }
+
+    /**
+     * Calculates the number of elements in `array`, omitting `exclusion` element.
+     * @param array - Array
+     * @param exclusion - Element to omit
+     */
+    static exclusiveLength<T>(array: Array<T>, exclusion: T): number {
+        const excIdx = array.indexOf(exclusion);
+        if (excIdx < 0) return array.length;
+        if (excIdx === 0 || excIdx === array.length) return array.length - 1;
+
+        const lArr = array.slice(0, excIdx);
+        const rArr = array.slice(excIdx + 1, array.length + 1);
+
+        return lArr.length + rArr.length;
+    }
 }
