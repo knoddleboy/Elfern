@@ -1,8 +1,13 @@
-// Modules to control application life and create native browser window
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 
+const Store = require("../src/utils/Store/index");
+const { globalSettings } = require("../src/configs");
+
 require("@electron/remote/main").initialize();
+Store.initRenderer();
+
+let transferredStore = {};
 
 const createWindow = () => {
     // Create the browser window.
@@ -17,7 +22,6 @@ const createWindow = () => {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // Get access to IPC
-            enableRemoteModules: true,
         },
     });
 
@@ -26,6 +30,14 @@ const createWindow = () => {
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();
+
+    mainWindow.on("maximize", () => {
+        mainWindow.webContents.send("window-maximized");
+    });
+
+    mainWindow.on("unmaximize", () => {
+        mainWindow.webContents.send("window-restored");
+    });
 
     ipcMain.on("minimize-app", () => {
         mainWindow.minimize();
@@ -40,16 +52,12 @@ const createWindow = () => {
         mainWindow.maximize();
     });
 
-    mainWindow.on("maximize", () => {
-        mainWindow.webContents.send("window-maximized");
-    });
-
-    mainWindow.on("unmaximize", () => {
-        mainWindow.webContents.send("window-restored");
-    });
-
     ipcMain.on("close-app", () => {
         mainWindow.close();
+    });
+
+    ipcMain.on("dispatch-main-store", (event, arg) => {
+        Object.assign(transferredStore, arg);
     });
 };
 
@@ -80,3 +88,6 @@ app.on("window-all-closed", () => {
 });
 
 /* The rest of app's specific main process code */
+app.on("will-quit", () => {
+    globalSettings.set(transferredStore);
+});
