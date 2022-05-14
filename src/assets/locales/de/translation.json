@@ -1,0 +1,30 @@
+{
+    "main-menu": {
+        "start-button": "Anfangen"
+    },
+    "game-interface": {
+        "start-blinking-title": "Drücken Sie eine beliebige Taste, um zu starten...",
+        "cancel-button": "Zurück",
+        "new-game-button": "Neues Spiel",
+        "round-title": "R"
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "sound": "Geräusche",
+        "language": "Sprache",
+        "drop-down": {
+            "en": "Englisch",
+            "ua": "Ukrainisch",
+            "de": "Deutsch"
+        },
+        "quit-button": "Verlassen",
+        "quit-dialog": {
+            "title": "Speichern und Verlassen?",
+            "confirm-button": "Jawohl"
+        }
+    },
+    "new-game": {
+        "title": "Anzahl Runden:",
+        "confirm-button": "Anfangen"
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "main-menu": {
+        "start-button": "Start"
+    },
+    "game-interface": {
+        "start-blinking-title": "Press any key to start dealing...",
+        "cancel-button": "Cancel",
+        "new-game-button": "New game",
+        "round-title": "R"
+    },
+    "settings": {
+        "title": "Settings",
+        "sound": "Sound",
+        "language": "Language",
+        "drop-down": {
+            "en": "English",
+            "ua": "Ukrainian",
+            "de": "German"
+        },
+        "quit-button": "Quit",
+        "quit-dialog": {
+            "title": "Save and Quit?",
+            "confirm-button": "Yes"
+        }
+    },
+    "new-game": {
+        "title": "Choose rounds:",
+        "confirm-button": "Done"
+    }
+}

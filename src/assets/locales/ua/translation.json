@@ -1,0 +1,30 @@
+{
+    "main-menu": {
+        "start-button": "Почати"
+    },
+    "game-interface": {
+        "start-blinking-title": "Натисніть будь-яку клавішу, щоб почати...",
+        "cancel-button": "Назад",
+        "new-game-button": "Нова гра",
+        "round-title": "Р"
+    },
+    "settings": {
+        "title": "Налаштування",
+        "sound": "Звуки",
+        "language": "Мова",
+        "drop-down": {
+            "en": "Англійська",
+            "ua": "Українська",
+            "de": "Німецька"
+        },
+        "quit-button": "Вийти",
+        "quit-dialog": {
+            "title": "Зберегти та Вийти?",
+            "confirm-button": "Так"
+        }
+    },
+    "new-game": {
+        "title": "К-сть раундів:",
+        "confirm-button": "Почати"
+    }
+}
