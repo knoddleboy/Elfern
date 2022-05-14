@@ -1,5 +1,7 @@
 import React, { useRef, useState } from "react";
 
+import useTranslation from "@utils/hooks/useTranslation";
+
 import CustomButton from "@components/CustomButton";
 import CardLinker from "@utils/CardLinker";
 
@@ -14,6 +16,8 @@ const cardShadow = "0px 3px 28px 0px rgba(0, 0, 0, 0.3)";
 const MainMenu: React.FC<{ render: ReactSetState }> = ({ render }) => {
     const mainMenuRef = useRef<HTMLDivElement>(null);
     const [menuAnimationState, setMenuAnimationState] = useState(false);
+
+    const { t } = useTranslation();
 
     return (
         <React.Fragment>
@@ -100,7 +104,7 @@ const MainMenu: React.FC<{ render: ReactSetState }> = ({ render }) => {
                         rounded md:rounded-md lg:rounded-lg"
                         onClick={() => setMenuAnimationState((prevState) => !prevState)}
                     >
-                        Play
+                        {t("main-menu.start-button")}
                     </CustomButton>
                 </div>
             </div>
