@@ -1,0 +1,13 @@
+.RulesButton {
+    transition: filter 150ms linear;
+
+    polygon {
+        transition: transform 150ms ease;
+    }
+
+    &:hover {
+        polygon {
+            transform: translateY(2px);
+        }
+    }
+}
