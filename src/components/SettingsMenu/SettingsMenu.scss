@@ -1,0 +1,80 @@
+@import "../../shared/mixins/sass-mixins.scss";
+
+$left-offset: -40%;
+
+.SettingsMenu {
+    $bg-color: #e6dbcd;
+
+    transition: left 150ms ease-out;
+    left: $left-offset;
+
+    .option-bg {
+        transition: background-color 50ms ease;
+
+        &:hover {
+            background-color: rgba($bg-color, 0.38);
+        }
+
+        &:active {
+            background-color: rgba($bg-color, 0.7);
+        }
+    }
+
+    .dropdown {
+        transition: transform 100ms ease, opacity 100ms ease;
+        transform: translateY(-0.5rem);
+        opacity: 0;
+        pointer-events: none;
+
+        &.opened {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        & > li {
+            padding: 0.5rem 1rem;
+            background-color: rgba($bg-color, 0.38);
+            color: #6f6f6f;
+            cursor: pointer;
+
+            &.active {
+                background-color: rgba($bg-color, 0.8) !important;
+                color: #313131;
+                font-weight: 500;
+
+                & > img {
+                    opacity: 0.9 !important;
+                }
+            }
+
+            &:hover {
+                background-color: rgba($bg-color, 0.5);
+            }
+
+            &:active {
+                background-color: rgba($bg-color, 1);
+            }
+        }
+    }
+
+    .quit {
+        background-color: rgba($bg-color, 0.7);
+
+        &:hover {
+            background-color: rgba($bg-color, 1);
+        }
+    }
+}
+
+.DialogWrapper.fade-in {
+    .SettingsMenu {
+        left: 0;
+    }
+}
+
+.DialogWrapper.fade-out {
+    .SettingsMenu {
+        left: $left-offset;
+    }
+}
