@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { ipcRenderer } from "electron";
 
-import { TitlebarButtons } from "@utils/TitlebarButtons";
+import DispatchToMainProcess from "@utils/DispatchToMainProcess";
 
 import TitlebarIcon from "./TitlebarIcon";
 import TitlebarTitle from "./TitlebarTitle";
-import CustomButton from "../CustomButton";
 
 import { default as MinimizeWindow } from "@mui/icons-material/HorizontalRuleRounded";
 import { default as MaximizeWindow } from "@mui/icons-material/CropSquare";
@@ -32,19 +31,21 @@ const Titlebar: React.FC = () => {
                 <TitlebarTitle />
             </div>
             <div className="absolute h-full top-0 right-0 flex justify-between">
-                <CustomButton
+                <button
                     className={`${ButtonStyles} hover:bg-dark-600`}
-                    onClick={TitlebarButtons.minimizeApp}
+                    onClick={DispatchToMainProcess.minimizeApp}
+                    tabIndex={1}
                 >
-                    <MinimizeWindow
-                        sx={{ color: ToggleIconColor, fontSize: 16, marginTop: "8px" }}
-                    />
-                </CustomButton>
-                <CustomButton
+                    <MinimizeWindow sx={{ color: ToggleIconColor, fontSize: 16, marginTop: "8px" }} />
+                </button>
+                <button
                     className={`${ButtonStyles} hover:bg-dark-600`}
-                    onClick={TitlebarButtons.maximizeRestoreApp}
+                    onClick={DispatchToMainProcess.maximizeRestoreApp}
+                    tabIndex={2}
                 >
                     {windowState ? (
+                        <MaximizeWindow sx={{ color: ToggleIconColor, fontSize: 15 }} />
+                    ) : (
                         <RestoreWindow
                             sx={{
                                 color: ToggleIconColor,
@@ -52,16 +53,15 @@ const Titlebar: React.FC = () => {
                                 transform: "rotate(180deg)",
                             }}
                         />
-                    ) : (
-                        <MaximizeWindow sx={{ color: ToggleIconColor, fontSize: 15 }} />
                     )}
-                </CustomButton>
-                <CustomButton
+                </button>
+                <button
                     className={`${ButtonStyles} hover:bg-[#cf0e1e]`}
-                    onClick={TitlebarButtons.closeApp}
+                    onClick={DispatchToMainProcess.closeApp}
+                    tabIndex={3}
                 >
                     <CloseWindow sx={{ color: ToggleIconColor, fontSize: 17 }} />
-                </CustomButton>
+                </button>
             </div>
         </div>
     );
