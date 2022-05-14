@@ -1,5 +1,7 @@
 import React from "react";
 
+import { availableTranslations } from "@constants/global";
+
 export type ElectronIpcChannel = string;
 export type ReactSetState = React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -20,9 +22,5 @@ export type ModelRGBA = `rgba(${number}, ${number}, ${number}, ${number})`;
 /** Defines type for any number represented in amount of pixels. */
 export type NumberInPX = `${number}px`;
 
-export interface ICustomButtonProps extends React.ComponentPropsWithoutRef<"button"> {
-    children: React.ReactNode;
-    className?: string | undefined;
-    otherProps?: React.PropsWithoutRef<HTMLButtonElement>;
-    onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}
+/** Available translations */
+export type AvailableCountryCodes = typeof availableTranslations[number];
