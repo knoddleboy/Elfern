@@ -1,0 +1,19 @@
+.switch-base {
+    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translate(1.5px, 1.5px);
+}
+
+.switch-track {
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: #e6dbcd;
+}
+
+.switch-checked {
+    .switch-base {
+        transform: translate(calc(100% + 4px), 1.5px);
+    }
+
+    .switch-track {
+        background-color: #bfa888;
+    }
+}
