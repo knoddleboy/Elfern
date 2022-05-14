@@ -1,6 +1,6 @@
 @import "../../shared/mixins/sass-mixins.scss";
 
-.interface--in-animation {
+.GameInterface--in-animation {
     @keyframes interface-in {
         0% {
             opacity: 0;
@@ -13,7 +13,7 @@
     @include forward-animation(interface-in, 0.3s, linear);
 }
 
-.stock--in-animation {
+.Stock--in-animation {
     @for $i from 1 to 34 {
         #card-container:nth-child(#{$i}) {
             @keyframes stock-in {
@@ -37,4 +37,22 @@
 #Stock__underlay {
     font-size: 5vw;
     font-family: "English Towne";
+}
+
+.deal-active {
+    @keyframes dash-move {
+        to {
+            background-position: 100% 0%, 0% 100%, 0% 0%, 100% 100%;
+        }
+    }
+
+    border: none !important;
+    background: linear-gradient(90deg, var(--green-300) 50%, transparent 50%),
+        linear-gradient(90deg, var(--green-300) 50%, transparent 50%),
+        linear-gradient(0deg, var(--green-300) 50%, transparent 50%),
+        linear-gradient(0deg, var(--green-300) 50%, transparent 50%);
+    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+    background-size: 16px 4px, 16px 4px, 4px 16px, 4px 16px;
+    background-position: 0% 0%, 100% 100%, 0% 100%, 100% 0px;
+    animation: dash-move 20s linear infinite;
 }
