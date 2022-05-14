@@ -1,0 +1,79 @@
+@import "../../shared/mixins/sass-mixins.scss";
+
+$blur-spread: 10px;
+
+.DialogWrapper {
+    /* DIALOG BACKGROUND PRE-FADE-STYLES */
+
+    .acrylic-bg {
+        $anim-time: 0.15s;
+        $anim-type: linear;
+
+        // Background blur
+        &::before {
+            content: "";
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            backdrop-filter: blur($blur-spread) opacity(0);
+            transition: backdrop-filter $anim-time $anim-type;
+            z-index: -2;
+        }
+
+        // Noise texture
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity $anim-time $anim-type;
+            background: #000 url("../../assets/images/noise.png");
+            z-index: -1;
+        }
+    }
+
+    /* DIALOG FADE IN EVENT */
+
+    &.fade-in {
+        .acrylic-bg {
+            &::before {
+                backdrop-filter: blur($blur-spread) opacity(1);
+            }
+
+            &::after {
+                opacity: 0.5;
+            }
+        }
+    }
+
+    /* DIALOG FADE OUT EVENT */
+
+    &.fade-out {
+        transition: backdrop-filter 0.3s ease, opacity 0.3s ease !important;
+
+        .acrylic-bg {
+            &::before {
+                backdrop-filter: blur($blur-spread) opacity(0);
+            }
+
+            &::after {
+                opacity: 0;
+            }
+        }
+    }
+
+    /* CLOSE DIALOG BUTTON */
+
+    .dialog-close {
+        svg {
+            color: rgba(50, 50, 50, 0.5);
+            transition: color 0.1s linear;
+
+            &:hover {
+                color: rgba(50, 50, 50, 0.8);
+            }
+        }
+    }
+}
