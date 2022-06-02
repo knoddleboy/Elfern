@@ -33,27 +33,28 @@ $left-offset: -40%;
         }
 
         & > li {
-            padding: 0.5rem 1rem;
-            background-color: rgba($bg-color, 0.38);
-            color: #6f6f6f;
-            cursor: pointer;
+            button {
+                padding: 0.5rem 1rem;
+                background-color: rgba($bg-color, 0.38);
+                color: #6f6f6f;
 
-            &.active {
-                background-color: rgba($bg-color, 0.8) !important;
-                color: #313131;
-                font-weight: 500;
+                &.active {
+                    background-color: rgba($bg-color, 0.8) !important;
+                    color: #313131;
+                    font-weight: 500;
 
-                & > img {
-                    opacity: 0.9 !important;
+                    & > img {
+                        opacity: 0.9 !important;
+                    }
                 }
-            }
 
-            &:hover {
-                background-color: rgba($bg-color, 0.5);
-            }
+                &:hover {
+                    background-color: rgba($bg-color, 0.5);
+                }
 
-            &:active {
-                background-color: rgba($bg-color, 1);
+                &:active {
+                    background-color: rgba($bg-color, 1);
+                }
             }
         }
     }
