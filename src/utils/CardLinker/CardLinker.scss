@@ -1,11 +1,15 @@
 #card-container {
     display: flex;
     flex-direction: column;
-    transition: top 500ms ease, left 500ms ease, transform 400ms ease; // translate was 150 ms...
+    transition: top 500ms ease, left 500ms ease, transform 400ms ease, box-shadow 200ms ease;
 
     &.card-active {
         transition: top 0ms linear, left 0ms linear, transform 0ms linear;
         cursor: grabbing !important;
         z-index: 33 !important;
     }
+
+    // &.winning-card {
+    //     box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px !important;
+    // }
 }
