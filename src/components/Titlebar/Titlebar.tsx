@@ -6,10 +6,10 @@ import DispatchToMainProcess from "@utils/DispatchToMainProcess";
 import TitlebarIcon from "./TitlebarIcon";
 import TitlebarTitle from "./TitlebarTitle";
 
-import { default as MinimizeWindow } from "@mui/icons-material/HorizontalRuleRounded";
-import { default as MaximizeWindow } from "@mui/icons-material/CropSquare";
-import { default as CloseWindow } from "@mui/icons-material/CloseRounded";
-import { default as RestoreWindow } from "@mui/icons-material/FilterNoneRounded";
+import MinimizeWindow from "@mui/icons-material/HorizontalRuleRounded";
+import MaximizeWindow from "@mui/icons-material/CropSquare";
+import CloseWindow from "@mui/icons-material/CloseRounded";
+import RestoreWindow from "@mui/icons-material/FilterNoneRounded";
 
 import "./Titlebar.scss";
 
@@ -34,14 +34,14 @@ const Titlebar: React.FC = () => {
                 <button
                     className={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={DispatchToMainProcess.minimizeApp}
-                    tabIndex={1}
+                    tabIndex={-1}
                 >
                     <MinimizeWindow sx={{ color: ToggleIconColor, fontSize: 16, marginTop: "8px" }} />
                 </button>
                 <button
                     className={`${ButtonStyles} hover:bg-dark-600`}
                     onClick={DispatchToMainProcess.maximizeRestoreApp}
-                    tabIndex={2}
+                    tabIndex={-1}
                 >
                     {windowState ? (
                         <MaximizeWindow sx={{ color: ToggleIconColor, fontSize: 15 }} />
@@ -58,7 +58,7 @@ const Titlebar: React.FC = () => {
                 <button
                     className={`${ButtonStyles} hover:bg-[#cf0e1e]`}
                     onClick={DispatchToMainProcess.closeApp}
-                    tabIndex={3}
+                    tabIndex={-1}
                 >
                     <CloseWindow sx={{ color: ToggleIconColor, fontSize: 17 }} />
                 </button>
