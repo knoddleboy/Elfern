@@ -9,7 +9,7 @@ const INITIAL_STATE: AvailableCountryCodes = TransferStore.get("LANGUAGE") as Av
 const langReducer = (state = INITIAL_STATE, action: Action) => {
     switch (action.type) {
         case ActionType.LANGUAGE:
-            TransferStore.send({ lang: action.payload });
+            TransferStore.send({ LANGUAGE: action.payload });
             return action.payload;
         default:
             return state;
