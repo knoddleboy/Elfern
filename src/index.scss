@@ -11,7 +11,13 @@
 
     /* BLACK */
     --dark-800: #313131;
+    --dark-700: #3e3f41;
     --dark-600: #4a4c50;
+    --dark-500: #505050;
+    --dark-400: #626262;
+    --dark-300: #7a7a7a;
+    --dark-200: #929291;
+    --dark-outline: #161616;
 
     /* GREEN */
     --green-800: #006717; // dark
@@ -25,7 +31,7 @@
     --blue-600: #0072b3;
     --blue-500: #0077b9;
     --blue-400: #1a88c4;
-    --blue-300: #66add5;
+    --blue-300: #1d9de2;
 
     /* ALPHA */
     --alpha-5: rgba(0, 0, 0, 0.5);
@@ -65,17 +71,23 @@
         -webkit-user-select: none;
     }
 
+    ::-webkit-scrollbar {
+        width: 0;
+    }
+
     h1 {
         @apply text-xl font-bold md:text-2xl xl:text-3xl;
     }
 
     // Change default outline color
-    div,
-    button,
-    span {
-        outline: none;
+    div:not([data-dummy-focus]),
+    button:not([data-dummy-focus]),
+    span:not([data-dummy-focus]),
+    li:not([data-dummy-focus]) {
         &:focus-visible {
-            outline: 2px solid #16161d !important;
+            transition: outline 75ms ease;
+            outline: 2px solid var(--dark-outline) !important;
+            outline-offset: 2px;
         }
     }
 
