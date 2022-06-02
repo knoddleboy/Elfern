@@ -2,12 +2,12 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 
 const Store = require("../src/utils/Store/index");
-const { globalSettings } = require("../src/configs");
+// const { globalSettings } = require("../src/configs");
 
 require("@electron/remote/main").initialize();
 Store.initRenderer();
 
-let transferredStore = {};
+// let transferredStore = {};
 
 const createWindow = () => {
     // Create the browser window.
@@ -24,6 +24,8 @@ const createWindow = () => {
             contextIsolation: false, // Get access to IPC
         },
     });
+
+    // mainWindow.resizable = false;
 
     // Load the index.html of the app.
     mainWindow.loadURL("http://localhost:3000");
@@ -56,9 +58,9 @@ const createWindow = () => {
         mainWindow.close();
     });
 
-    ipcMain.on("dispatch-main-store", (event, arg) => {
-        Object.assign(transferredStore, arg);
-    });
+    // ipcMain.on("dispatch-main-store", (e, arg) => {
+    //     Object.assign(transferredStore, arg);
+    // });
 };
 
 /**
@@ -88,6 +90,6 @@ app.on("window-all-closed", () => {
 });
 
 /* The rest of app's specific main process code */
-app.on("will-quit", () => {
-    globalSettings.set(transferredStore);
-});
+// app.on("will-quit", () => {
+//     globalSettings.set(transferredStore);
+// });
