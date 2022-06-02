@@ -8,7 +8,7 @@ const INITIAL_STATE: boolean = TransferStore.get("ENABLE_AUDIO");
 const audioReducer = (state = INITIAL_STATE, action: Action) => {
     switch (action.type) {
         case ActionType.ENABLE_AUDIO:
-            TransferStore.send({ audio: !state });
+            TransferStore.send({ ENABLE_AUDIO: !state });
             return !state;
         default:
             return state;
