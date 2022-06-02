@@ -12,21 +12,19 @@ import readFile from "@utils/readFile";
 import "./RulesButton.scss";
 
 const RulesButton: React.FC<{ tabIndex?: number }> = ({ tabIndex }) => {
-    const [modalState, setModalState] = useState(false);
+    const lng = useSelector((state: State) => state.LANGUAGE);
 
-    const lng = useSelector((state: State) => state.lang);
+    const [modalState, setModalState] = useState(false);
 
     return (
         <React.Fragment>
             {modalState && (
-                <Modal
-                    isOpen={modalState}
-                    toggleModal={setModalState}
-                    displayData={readFile(`src/assets/locales/${lng}/rules.md`)}
-                />
+                <Modal isOpen={modalState} toggleModal={setModalState}>
+                    {readFile(`src/assets/locales/${lng}/rules.md`)}
+                </Modal>
             )}
             <CustomButton
-                className="mb-auto"
+                className="mb-auto rounded-[25%]"
                 onClick={() => setModalState((prevState) => !prevState)}
                 tabIndex={tabIndex}
             >
