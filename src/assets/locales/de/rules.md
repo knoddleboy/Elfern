@@ -26,7 +26,7 @@ Der Dealer teilt jedem Spieler dreimal 2 Karten aus. Die restlichen Karten aus e
 
 Der erste Zug macht **_Vorhand_** (Gegner des Dealers): legt die gewünschte Karte aus. Sein Gegner muss eine Karte der gleichen Farbe, aber eines höheren Ranges legen. Wenn es keine Karte dieser Farbe gibt, kann er eine beliebige Karte legen (wodurch die Karte verloren geht). **_Bribe_** (ursprüngliche und zerstörte Karte) gewinnt der Spieler mit der höchsten Karte der führenden Farbe. Nach jeder Bestechung muss jeder Spieler eine Karte aus dem Vorrat nehmen.
 
-> Nachdem der Vorrat abgelaufen ist, muss eine Karte der gleichen Farbe auf die Karte gelegt werden (sofern eine solche Karte auf der Hand ist).
+> Nachdem der Vorrat leer ist, muss eine Karte **gleicher Farbe** auf die Karte gelegt werden. Das Spiel wird also fortgesetzt, solange die Spieler die erforderlichen Karten haben.
 >
 > ### Anmerkung
 >
