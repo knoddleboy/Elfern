@@ -62,7 +62,7 @@ export default class _ {
      * @param array - Array
      * @param exclusion - Element to omit
      */
-    static exclusiveLength<T>(array: Array<T>, exclusion: T): number {
+    static exclusiveLength<T>(array: Array<T | number>, exclusion: T | number = -1): number {
         const excIdx = array.indexOf(exclusion);
         if (excIdx < 0) return array.length;
         if (excIdx === 0 || excIdx === array.length) return array.length - 1;
@@ -71,5 +71,17 @@ export default class _ {
         const rArr = array.slice(excIdx + 1, array.length + 1);
 
         return lArr.length + rArr.length;
+    }
+
+    /**
+     * Returns a random integer between `min` (inclusive) and `max` (inclusive).
+     */
+    static randIntRange(min: number, max: number): number {
+        [min, max] = [Math.ceil(min), Math.floor(max)];
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    static choice<T>(array: Array<T>): T {
+        return array[Math.floor(Math.random() * array.length)];
     }
 }
