@@ -26,5 +26,41 @@
     "new-game": {
         "title": "Choose rounds:",
         "confirm-button": "Done"
+    },
+    "game-end": {
+        "win": "You win!",
+        "lose": "You lose!",
+        "points": "Points:",
+        "time": "Time:"
+    },
+    "pop-up": {
+        "incomp-suits": "Suits are incompatible",
+        "player-no-card": "You have no cards to answer",
+        "opponent-no-card": "Opponent has no cards to answer"
+    },
+    "scoring": {
+        "title": "End of round:",
+        "side": {
+            "player": "You",
+            "opponent": "Opponent"
+        },
+        "pictured-ranks": {
+            "jack": "J",
+            "queen": "Q",
+            "king": "K",
+            "ace": "A"
+        },
+        "btn": "Next round"
+    },
+    "saved-progress-warning": {
+        "title": "Your game process",
+        "desc": {
+            "0": "You already have stored progress.",
+            "1": "Would you like to restore it?"
+        },
+        "btns": {
+            "cancel": "Cancel",
+            "restore": "Restore"
+        }
     }
 }
