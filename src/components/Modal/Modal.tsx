@@ -15,39 +15,66 @@ const md = require("markdown-it")({
     typographer: true,
 });
 
-interface IModalProps {
+export interface IModalProps {
+    children?: React.ReactNode;
     size?: `${number}/${number}`;
     isOpen: boolean;
     toggleModal: ReactSetState;
-    displayData: string | JSX.Element;
+    disableScrollBar?: boolean;
+    unclosable?: true;
+    sinkTimer?: boolean;
 }
 
-const Modal: React.FC<IModalProps> = ({ size, isOpen, toggleModal, displayData }) => {
+const ModalContent: React.FC<Pick<IModalProps, "children">> = ({ children }) => (
+    <>
+        {typeof children === "string" ? (
+            <React.Fragment>
+                <article
+                    className="inserted-content prose prose-slate max-w-full"
+                    dangerouslySetInnerHTML={{
+                        __html: md.render(children),
+                    }}
+                />
+                <ModalCloseButton className="w-full flex justify-center" />
+            </React.Fragment>
+        ) : (
+            children
+        )}
+    </>
+);
+//* TODO: extend from DialogWrapper
+const Modal: React.FC<IModalProps> = ({
+    children,
+    size,
+    isOpen,
+    toggleModal,
+    unclosable,
+    sinkTimer,
+    disableScrollBar = false,
+}) => {
     return (
-        <DialogWrapper isOpen={isOpen} toggle={toggleModal} centerContent={true}>
+        <DialogWrapper
+            isOpen={isOpen}
+            toggle={toggleModal}
+            centerContent={true}
+            unclosable={unclosable}
+            sinkTimer={sinkTimer}
+        >
             <div
+                id="dialog"
                 className="modal-content absolute bg-white-normal p-4 rounded-xl"
                 style={{
                     width: `calc(100% * ${size || "8 / 12"})`,
                     height: size ? "fit-content" : "calc(100% * 10 / 12)",
-                    // aspectRatio: size ? "29 / 25" : "auto",
                 }}
             >
-                <SimpleBar style={{ height: "100%" }} autoHide={true} timeout={1000}>
-                    {typeof displayData === "string" ? (
-                        <React.Fragment>
-                            <article
-                                className="inserted-content prose prose-slate max-w-full"
-                                dangerouslySetInnerHTML={{
-                                    __html: md.render(displayData),
-                                }}
-                            />
-                            <ModalCloseButton className="w-full flex justify-center" />
-                        </React.Fragment>
-                    ) : (
-                        displayData
-                    )}
-                </SimpleBar>
+                {disableScrollBar ? (
+                    <ModalContent>{children}</ModalContent>
+                ) : (
+                    <SimpleBar style={{ height: "100%" }} autoHide={true} timeout={1000}>
+                        <ModalContent>{children}</ModalContent>
+                    </SimpleBar>
+                )}
             </div>
         </DialogWrapper>
     );
