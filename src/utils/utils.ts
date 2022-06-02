@@ -1,3 +1,5 @@
+import { CardRank } from "./CardLinker/CardLinker.types";
+
 /**
  * Prints a warning(s) to stdout with newline. Multiple arguments can be passed, with
  * the first used as the primary message and all additional used as substitution values.
@@ -121,42 +123,54 @@ export function getByDotNotation<T extends Record<string, any>, Key extends stri
 }
 
 /**
- * Gets computed translate values
- * @param element - Element, whose translate is computed.
- * @returns Object of x, y and z values
+ * Takes rank of the card and normalizes to the corresponding number:
+ * @example
+ * {number} -> {number}
+ * 'jack' -> 11
+ * 'queen' -> 12
+ * 'king' -> 13
+ * 'ace' -> 14
  */
-export function getTranslateValues(element: HTMLElement) {
-    const style = window.getComputedStyle(element);
-    const matrix = style["transform"];
-
-    // No transform property. Simply return 0 values.
-    if (matrix === "none" || typeof matrix === "undefined") {
-        return {
-            x: 0,
-            y: 0,
-            z: 0,
-        };
-    }
-
-    // Can either be 2d or 3d transform
-    const matrixType = matrix.includes("3d") ? "3d" : "2d";
-    const matrixValues = matrix.match(/matrix.*\((.+)\)/)![1].split(", ");
-
-    // Since 3d matrices have 6 values, we select the last two as they represent x and y
-    if (matrixType === "2d") {
-        return {
-            x: parseFloat(matrixValues[4]),
-            y: parseFloat(matrixValues[5]),
-            z: 0,
-        };
-    }
-
-    // Since 3d matrices have 16 values, we select the 13th, 14th, and 15th values as they represent x, y, and z
-    if (matrixType === "3d") {
-        return {
-            x: parseFloat(matrixValues[12]),
-            y: parseFloat(matrixValues[13]),
-            z: parseFloat(matrixValues[14]),
-        };
-    }
+export function normalizedRank(rank: CardRank): number {
+    if (typeof rank === "number") return rank;
+    if (rank === "jack") return 11;
+    if (rank === "queen") return 12;
+    if (rank === "king") return 13;
+    return 14; // ace
 }
+
+/**
+ * Detects whether the `element` (can be also cursor) entered the `region` viewport.
+ * @param expand - Defines the expand of the region (in px), where collision starts to be detected.
+ */
+export const detectCollision = (
+    element: HTMLElement | { x: number; y: number },
+    region: HTMLElement,
+    expand: number = 0
+) => {
+    const elementRect =
+        element instanceof HTMLElement
+            ? element.getBoundingClientRect()
+            : Object.assign(element, { width: 0, height: 0 });
+    const regionRect = region.getBoundingClientRect();
+
+    return !(
+        elementRect.y + elementRect.height < regionRect.y + expand ||
+        elementRect.y > regionRect.y + regionRect.height - expand ||
+        elementRect.x + elementRect.width < regionRect.x + expand ||
+        elementRect.x > regionRect.x + regionRect.width - expand
+    );
+};
+
+export const formatTime = (timer: number) => {
+    const extractSeconds = `0${timer % 60}`.slice(-2);
+    const minutes = Math.floor(timer / 60);
+    const extractMinutes = `0${minutes % 60}`.slice(-2);
+    const extractHours = `${Math.floor(timer / 3600)}`.slice(-2);
+
+    return `${extractHours}:${extractMinutes}:${extractSeconds}`;
+};
+
+export const excludeObjectProps = <T extends object>(object: T, ...props: (keyof T)[]) => {
+    return Object.fromEntries(Object.entries(object).filter(([key]) => !props.includes(key as keyof T)));
+};
