@@ -104,8 +104,6 @@
     h2,
     h3 {
         color: var(--dark-800);
-        font-family: "Germania One", cursive;
-        letter-spacing: 1px;
     }
 
     h1 {
@@ -113,6 +111,7 @@
         width: 50%;
         text-align: center;
         letter-spacing: 2px;
+        font-family: "Germania One", cursive;
 
         &:first-letter {
             font-family: "English Towne", cursive;
