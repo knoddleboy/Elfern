@@ -1,11 +1,17 @@
 import { ModelHEX, ModelRGB, ModelRGBA } from "@src/types";
 
+export const SUITS = [7, 8, 9, 10, "jack", "queen", "king", "ace"] as const;
+export const RANKS = ["clubs", "diamonds", "hearts", "spades"] as const;
+
+export type CardRank = typeof SUITS[number];
+export type CardSuit = typeof RANKS[number];
+
 export interface ICardLinkerProps {
     /** Defines card suit to be displayed */
-    suit?: "clubs" | "diamonds" | "hearts" | "spades";
+    suit?: CardSuit;
 
     /** Defines card rank to be displayed */
-    rank?: "ace" | "king" | "queen" | "jack" | 10 | 9 | 8 | 7;
+    rank?: CardRank;
 
     /**
      * *--customization prop--*
