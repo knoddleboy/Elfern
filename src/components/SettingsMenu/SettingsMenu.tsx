@@ -30,6 +30,8 @@ import { maskArray } from "@utils/utils";
 
 import "./SettingsMenu.scss";
 
+const { globalSettings } = require("../../configs");
+
 interface ISettingsMenu {
     isOpen: boolean;
     toggler: ReactSetState;
@@ -40,10 +42,21 @@ interface IDropDownOption {
     optionKey: number;
     className?: string;
     content?: JSX.Element;
-    onClick?: () => void;
+    toggler?: () => void;
 }
 
 const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
+    const dispatch = useDispatch();
+    const { toggleAudio, setTranslation } = bindActionCreators(actionCreators, dispatch);
+
+    const store = useSelector((state: State) => state);
+
+    // Receive current audio state
+    const audioState = useSelector((state: State) => state.ENABLE_AUDIO);
+
+    // Receive current language state
+    const currentLang = useSelector((state: State) => state.LANGUAGE);
+
     // Drop-down menu state (i.e. opened or closed)
     const [langDropDownState, setLanguageDropDownState] = useState(false);
 
@@ -52,18 +65,6 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
 
     // Using window size to adjust modal size to it
     const { width } = useWindowSize();
-
-    // Dispatch to action
-    const dispatch = useDispatch();
-
-    // Obtain action creators
-    const { toggleAudio, setTranslation } = bindActionCreators(actionCreators, dispatch);
-
-    // Receive current audio state
-    const audioState = useSelector((state: State) => state.audio);
-
-    // Receive current language state
-    const currentLang = useSelector((state: State) => state.lang);
 
     const [optionState, setOptionState] = useState(maskArray(availableTranslations, currentLang));
 
@@ -84,24 +85,27 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
         },
     ];
 
-    const DropDownOption: React.FC<IDropDownOption> = ({ title, className, optionKey, content, onClick }) => {
+    const DropDownOption: React.FC<IDropDownOption> = ({ title, className, optionKey, content, toggler }) => {
         return (
-            <li
-                className={`${
-                    optionState[optionKey] ? "active" : ""
-                } flex items-center justify-between ${className} text-sm-adapt`}
-                onClick={(e) => {
-                    if ((e.target as HTMLElement).classList.contains("active")) return;
-                    setOptionState((prevState) => {
-                        const state = [false, false, false];
-                        state[optionKey] = !prevState[optionKey];
-                        return state;
-                    });
-                    if (onClick) onClick();
-                }}
-            >
-                {title}
-                {content}
+            <li className={`${className || ""}`}>
+                <button
+                    className={`rounded-[inherit] ${
+                        optionState[optionKey] ? "active" : ""
+                    } text-sm-adapt flex items-center justify-between`}
+                    onClick={(e) => {
+                        if ((e.target as HTMLElement).classList.contains("active")) return;
+                        setOptionState((prevState) => {
+                            const state = [false, false, false];
+                            state[optionKey] = !prevState[optionKey];
+                            return state;
+                        });
+                        if (toggler) toggler();
+                    }}
+                    tabIndex={langDropDownState ? 0 : -1}
+                >
+                    {title}
+                    {content}
+                </button>
             </li>
         );
     };
@@ -113,33 +117,37 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
                     isOpen={modalState}
                     size={`${width < 1024 ? "1/3" : "1/4"}`}
                     toggleModal={setModalState}
-                    displayData={
-                        <div className="text-center">
-                            <h1
-                                style={{
-                                    lineHeight: `${width < 1024 ? "1.125em" : ""}`,
+                    disableScrollBar
+                    sinkTimer
+                >
+                    <div className="text-center">
+                        <h1
+                            style={{
+                                lineHeight: `${width < 1024 ? "1.125em" : ""}`,
+                            }}
+                        >
+                            {t("settings.quit-dialog.title")}
+                        </h1>
+                        <span className="text-[10vw] font-english-towne text-[#e2e2e2]">E</span>
+                        <div className="w-full flex justify-around items-center">
+                            <CustomButton
+                                className="dialog-close
+                                    sm:w-2/5 md:w-5/12 py-1
+                                    transition-colors
+                                    text-white-text sm:text-sm md:text-lg uppercase
+                                    bg-[#42A5F5] hover:bg-[#1E88E5] active:bg-[#1671c0]
+                                    rounded-2xl"
+                                onClick={() => {
+                                    globalSettings.set(store);
+                                    DispatchToMainProcess.closeApp();
                                 }}
                             >
-                                {t("settings.quit-dialog.title")}
-                            </h1>
-                            <span className="text-[10vw] font-english-towne text-[#e2e2e2]">E</span>
-                            <div className="w-full flex justify-around items-center">
-                                <CustomButton
-                                    className="dialog-close
-                                    sm:w-2/5 md:w-5/12 py-1
-                                    transition-all
-                                    text-white-text sm:text-sm md:text-lg uppercase
-                                    bg-[#42A5F5] hover:bg-[#1E88E5]
-                                    rounded-2xl"
-                                    onClick={DispatchToMainProcess.closeApp}
-                                >
-                                    {t("settings.quit-dialog.confirm-button")}
-                                </CustomButton>
-                                <ModalCloseButton className="sm:w-2/5 md:w-5/12 flex justify-center" />
-                            </div>
+                                {t("settings.quit-dialog.confirm-button")}
+                            </CustomButton>
+                            <ModalCloseButton className="sm:w-2/5 md:w-5/12 flex justify-center" />
                         </div>
-                    }
-                />
+                    </div>
+                </Modal>
             )}
             <DialogWrapper isOpen={isOpen} toggle={toggler}>
                 <div
@@ -172,8 +180,8 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
                             />
                         </div>
                         <AudioClick sound={APPLICATION_MEDIA.click}>
-                            <div
-                                className="option-bg flex items-center px-4 py-2 rounded-full cursor-pointer"
+                            <button
+                                className="option-bg w-full flex items-center px-4 py-2 rounded-full cursor-pointer"
                                 onClick={() => setLanguageDropDownState((prevState) => !prevState)}
                             >
                                 <div className="flex flex-1 items-center">
@@ -181,9 +189,9 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
                                     <span className="text-base-adapt ml-2">{t("settings.language")}</span>
                                 </div>
                                 <ArrowDropDown className={`${langDropDownState ? "rotate-180" : ""}`} />
-                            </div>
+                            </button>
                         </AudioClick>
-                        <ul className={`dropdown ${langDropDownState ? "opened" : ""} my-2 rounded-2xl overflow-hidden`}>
+                        <ul className={`dropdown ${langDropDownState ? "opened" : ""} my-2 rounded-2xl`}>
                             <>
                                 {dropDownList.map((item, i) => {
                                     return (
@@ -197,9 +205,14 @@ const SettingsMenu: React.FC<ISettingsMenu> = ({ isOpen, toggler }) => {
                                                     className="w-[10%] opacity-70"
                                                 />
                                             }
-                                            onClick={() => {
-                                                setTranslation(item.countryCode);
-                                            }}
+                                            className={`${
+                                                i === 0
+                                                    ? "rounded-tl-[inherit] rounded-tr-[inherit]"
+                                                    : i === dropDownList.length - 1
+                                                    ? "rounded-bl-[inherit] rounded-br-[inherit]"
+                                                    : ""
+                                            }`}
+                                            toggler={() => setTranslation(item.countryCode)}
                                         />
                                     );
                                 })}
