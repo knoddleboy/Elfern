@@ -20,11 +20,47 @@
         "quit-button": "Verlassen",
         "quit-dialog": {
             "title": "Speichern und Verlassen?",
-            "confirm-button": "Jawohl"
+            "confirm-button": "Ja"
         }
     },
     "new-game": {
         "title": "Anzahl Runden:",
         "confirm-button": "Anfangen"
+    },
+    "game-end": {
+        "win": "Du gewinnst!",
+        "lose": "Du verlierst!",
+        "points": "Punkte:",
+        "time": "Zeit:"
+    },
+    "pop-up": {
+        "incomp-suits": "Anzüge sind anders",
+        "player-no-card": "Sie haben keine Karten zu beantworten",
+        "opponent-no-card": "Der Gegner hat keine Karten zu beantworten"
+    },
+    "scoring": {
+        "title": "Rundenende:",
+        "side": {
+            "player": "Sie",
+            "opponent": "Gegner"
+        },
+        "pictured-ranks": {
+            "jack": "J",
+            "queen": "Q",
+            "king": "K",
+            "ace": "A"
+        },
+        "btn": "Nächste Runde"
+    },
+    "saved-progress-warning": {
+        "title": "Ihr Spielverlauf",
+        "desc": {
+            "0": "Sie haben bereits Fortschritte gespeichert.",
+            "1": "Möchten Sie es wiederherstellen?"
+        },
+        "btns": {
+            "cancel": "Absagen",
+            "restore": "Wiederherstellen"
+        }
     }
 }
