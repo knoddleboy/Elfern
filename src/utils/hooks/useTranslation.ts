@@ -11,7 +11,7 @@ import de from "@assets/locales/de/translation.json";
 const langs = bindKeyValuePairs(availableTranslations, [us, ua, de]);
 
 const useTranslation = () => {
-    const currentLang = useSelector((state: State) => state.lang);
+    const currentLang = useSelector((state: State) => state.LANGUAGE);
 
     const t = (key: string) => {
         return getByDotNotation(langs[currentLang] as Record<string, any>, key, true);
