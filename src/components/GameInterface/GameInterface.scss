@@ -40,19 +40,19 @@
 }
 
 .deal-active {
-    @keyframes dash-move {
+    transition: filter 75ms linear;
+    filter: brightness(115%);
+}
+
+.WinningSideArrow {
+    opacity: 0;
+
+    @keyframes arrow-in {
         to {
-            background-position: 100% 0%, 0% 100%, 0% 0%, 100% 100%;
+            opacity: 1;
         }
     }
 
-    border: none !important;
-    background: linear-gradient(90deg, var(--green-300) 50%, transparent 50%),
-        linear-gradient(90deg, var(--green-300) 50%, transparent 50%),
-        linear-gradient(0deg, var(--green-300) 50%, transparent 50%),
-        linear-gradient(0deg, var(--green-300) 50%, transparent 50%);
-    background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
-    background-size: 16px 4px, 16px 4px, 4px 16px, 4px 16px;
-    background-position: 0% 0%, 100% 100%, 0% 100%, 100% 0px;
-    animation: dash-move 20s linear infinite;
+    @include forward-animation(arrow-in, 0.5s, ease);
+    animation-delay: 0.5s;
 }
