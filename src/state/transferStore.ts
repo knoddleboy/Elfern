@@ -3,6 +3,13 @@ import { globalSettings } from "../configs";
 
 type StoreType = typeof globalSettings.getStore;
 
+/**
+ * This is a helper class. It unifies `get` method of the `Store` (to get data from the store )
+ * and `send` method of the `ipcRenderer` (to send the data to the main process).
+ *
+ * @important
+ * Used in conjunction with redux.
+ */
 class TransferStore {
     /**
      * Get an item from the global config file.
