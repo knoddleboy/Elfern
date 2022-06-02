@@ -26,7 +26,6 @@ const CustomButton: React.FC<ICustomButtonProps> = ({
                 className={`btn ${className ? className : ""}`}
                 // Increase specificity by adding following styles to a style tag rather than to a className
                 style={{
-                    // filter: disabledStyles ? "brightness(1.3)" : "",
                     pointerEvents: disabledStyles ? "none" : "auto",
                     ...disabledStyles,
                 }}
