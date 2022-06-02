@@ -26,7 +26,7 @@ The dealer deals 2 cards to each player three times. The remaining cards form a 
 
 The first move makes **_forehand_** (dealer's opponent): lays out the desired card. His opponent must put a card of the same suit, but of a higher rank. If there is no card of this suit - he can put any card (thus loosing the card). **_Bribe_** (initial and demolished card) is won by the player of the highest card of the leading suit. After each bribe, each player must pick up one card from the stock.
 
-> After the stock has expired, a card of the same suit must be placed on the card (if there is such card in a hand).
+> After the stock is empty, a card of **the same suit** must be placed on the card. Thus, the game continues as long as the players have the necessary cards.
 >
 > ### Remark
 >
