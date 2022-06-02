@@ -11,11 +11,9 @@ const SettingsButton: React.FC<{ tabIndex?: number }> = ({ tabIndex }) => {
 
     return (
         <React.Fragment>
-            {settingsMenuState && (
-                <SettingsMenu isOpen={settingsMenuState} toggler={setSettingsMenuState} />
-            )}
+            {settingsMenuState && <SettingsMenu isOpen={settingsMenuState} toggler={setSettingsMenuState} />}
             <CustomButton
-                className="mt-auto"
+                className="mt-auto rounded-[25%]"
                 onClick={() => setSettingsMenuState((prevState) => !prevState)}
                 tabIndex={tabIndex}
             >
