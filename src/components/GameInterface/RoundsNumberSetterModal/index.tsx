@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
@@ -8,31 +8,34 @@ import useWindowSize from "@utils/hooks/useWindowSize";
 import useTranslation from "@utils/hooks/useTranslation";
 
 import CustomButton from "@src/components/CustomButton";
-import Modal, { IModalProps } from "@components/Modal";
+import Modal, { IModal } from "@components/Modal";
 import ModalCloseButton from "@components/Modal/ModalCloseButton";
-import { IPlayAreaSidebarButtons } from "../PlayAreaSidebarButtons";
+import { INewGameButton } from "../NewGameButton";
 
 import ArrowBack from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForward from "@mui/icons-material/ArrowForwardIosRounded";
 
 type TRoundsNumberSetterModal = Pick<
-    IModalProps & IPlayAreaSidebarButtons,
-    "isOpen" | "size" | "toggleModal" | "gameResetHandler" | "unclosable"
+    IModal & INewGameButton,
+    "isOpen" | "size" | "toggle" | "unclosable" | "gameResetHandler"
 >;
 
+// This component mounts only once pre active session since when a user decides to start a new game,
+// he would already be suggested to chose the number of rounds.Therefore we don't need to ask him/her again.
 const RoundsNumberSetterModal: React.FC<TRoundsNumberSetterModal & { showModalClose?: boolean }> = ({
     isOpen,
     size,
-    toggleModal,
+    toggle,
     gameResetHandler,
     unclosable,
     showModalClose = true,
 }) => {
-    //* External state management
     const dispatch = useDispatch();
-    const { setRoundStats } = bindActionCreators(actionCreators, dispatch);
-    const roundStats = useSelector((state: State) => state.ROUND_STATS);
+    const { setStats } = bindActionCreators(actionCreators, dispatch);
+    const stats = useSelector((state: State) => state.STATS);
+    const roundStats = useSelector((state: State) => state.STATS.ROUND_STATS);
 
+    // Store rounds to mutate inside the component
     const [rounds, setRounds] = useState(roundStats.current);
 
     const { width } = useWindowSize();
@@ -46,14 +49,17 @@ const RoundsNumberSetterModal: React.FC<TRoundsNumberSetterModal & { showModalCl
 
     // Set max number of rounds
     useEffect(() => {
-        setRoundStats({
-            current: roundStats.current,
-            max: rounds,
+        setStats({
+            ...stats,
+            ROUND_STATS: {
+                current: roundStats.current,
+                max: rounds,
+            },
         });
     }, [rounds]);
 
     return (
-        <Modal isOpen={isOpen} size={size} toggleModal={toggleModal} unclosable={unclosable} disableScrollBar>
+        <Modal isOpen={isOpen} size={size} toggle={toggle} unclosable={unclosable} disableScrollBar>
             <div className="h-full text-center text-dark-600 flex flex-col justify-between">
                 <h1>{t("new-game.title")}</h1>
                 <div
@@ -66,6 +72,7 @@ const RoundsNumberSetterModal: React.FC<TRoundsNumberSetterModal & { showModalCl
                         className="h-min flex-center rounded-[25%]"
                         onClick={addRemoveRounds(-1)}
                         disabledStyles={
+                            // When round is less than 1, disable button
                             rounds <= 1
                                 ? {
                                       filter: "brightness(2)",
@@ -88,13 +95,14 @@ const RoundsNumberSetterModal: React.FC<TRoundsNumberSetterModal & { showModalCl
                 <div className="w-full flex justify-around items-center">
                     <CustomButton
                         className="dialog-close
-                                        sm:w-2/5 md:w-5/12 py-1
-                                        transition-colors
-                                        text-white-text sm:text-sm md:text-lg uppercase
-                                        bg-[#42A5F5] hover:bg-[#1E88E5]
-                                        rounded-2xl
-                                    "
+                            sm:w-2/5 md:w-5/12 py-1
+                            transition-colors
+                            text-white-text sm:text-sm md:text-lg uppercase
+                            bg-[#42A5F5] hover:bg-[#1E88E5]
+                            rounded-2xl
+                        "
                         onClick={() => gameResetHandler((prevState) => !prevState)}
+                        preventAudio={!showModalClose}
                     >
                         {t("new-game.confirm-button")}
                     </CustomButton>
