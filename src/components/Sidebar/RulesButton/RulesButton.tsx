@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useSelector } from "react-redux";
 import { State } from "@state/index";
@@ -7,20 +7,29 @@ import Modal from "@components/Modal";
 import CustomButton from "@components/CustomButton";
 import { ReactComponent as BookRoundedIcon } from "@assets/images/sprites/BookRoundedIcon.svg";
 
-import readFile from "@utils/readFile";
+import { RULES } from "@src/constants";
 
 import "./RulesButton.scss";
 
 const RulesButton: React.FC<{ tabIndex?: number }> = ({ tabIndex }) => {
-    const lng = useSelector((state: State) => state.LANGUAGE);
+    const lang = useSelector((state: State) => state.LANGUAGE);
 
+    // Modal toggler
     const [modalState, setModalState] = useState(false);
+
+    // Fetch rules and save in `rules` state
+    const [rules, setRules] = useState("");
+    useEffect(() => {
+        fetch(RULES[lang])
+            .then((res) => res.text())
+            .then((rules) => setRules(rules));
+    });
 
     return (
         <React.Fragment>
             {modalState && (
-                <Modal isOpen={modalState} toggleModal={setModalState}>
-                    {readFile(`src/assets/locales/${lng}/rules.md`)}
+                <Modal isOpen={modalState} toggle={setModalState}>
+                    {rules}
                 </Modal>
             )}
             <CustomButton
