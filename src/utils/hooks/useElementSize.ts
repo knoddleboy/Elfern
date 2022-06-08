@@ -5,6 +5,12 @@ export interface IUseElementSize {
     height: number | null;
 }
 
+/**
+ * Every time, when the window is resized, returns element's sizes.
+ *
+ * @param elementRef Reference to the element to calculate its size
+ * @returns {width|height} Object of width and hight of the element
+ */
 const useElementSize = (elementRef: React.RefObject<HTMLElement> | undefined) => {
     const [elementSize, setElementSize] = useState<IUseElementSize>({
         width: null,

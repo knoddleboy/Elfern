@@ -2,18 +2,17 @@ import useElementSize from "@utils/hooks/useElementSize";
 import _ from "@utils/_";
 
 import { ICardDisplayProps, ICardComponentParameters } from "./CardLinker.types";
-import { CARD_ASPECT_RATIO } from "@constants/global";
+import { CARD_ASPECT_RATIO } from "@src/constants";
 
+/**
+ * Helper class that provides methods for receiving card's parameters,
+ * that are calculated based on real playing cards' params
+ */
 class CardLinkerAPI implements ICardComponentParameters, ICardDisplayProps {
-    constructor(
-        public cardSize: number,
-        public relativeElement: { ref: React.RefObject<HTMLElement> }
-    ) {}
+    constructor(public cardSize: number, public relativeElement: { ref: React.RefObject<HTMLElement> }) {}
 
     // Get via provided ref element, relative to which card's parameters will be calculated
     private readonly relativeElementSize = useElementSize(this.relativeElement?.ref);
-
-    // NOTE:
 
     /** Card component width. */
     get cardWidth() {

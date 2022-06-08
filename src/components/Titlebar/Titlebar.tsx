@@ -17,6 +17,7 @@ const Titlebar: React.FC = () => {
     const ToggleIconColor = "#e1e2e1";
     const ButtonStyles = "flex items-center justify-center w-9 cursor-auto";
 
+    // Window state: maximized or minimized
     const [windowState, setWindowState] = useState(false);
 
     useEffect(() => {

@@ -1,27 +1,24 @@
+import { readFileSync } from "original-fs";
+import { join } from "path";
+
 import { CardRank } from "./CardLinker/CardLinker.types";
 
 /**
- * Prints a warning(s) to stdout with newline. Multiple arguments can be passed, with
- * the first used as the primary message and all additional used as substitution values.
+ * Read file with fs's readFileSync
+ * @param file A path to file
  */
-export function warn(...args: any[]): void {
-    if (console) {
-        if (typeof args[0] === "string") args[0] = `%cInternal ⚠:: %c${args[0]}`;
-        console.warn(...args, "font-weight: bold", "font-wight: normal");
+export const readFile = (file: string) => {
+    try {
+        return readFileSync(join(process.cwd(), file), "utf8");
+    } catch (error) {
+        return (error as Error).message;
     }
-}
+};
 
-const alreadyWarned: Record<string, Date> = {}; // Storage for warnOnce function
-
-/**
- * Prints a one-off warning to stdout with newline. Multiple arguments can be passed, with
- * the first used as the primary message and all additional used as substitution values.
- */
-export function warnOnce(...args: any[]): void {
-    if (typeof args[0] === "string" && alreadyWarned[args[0]]) return;
-    if (typeof args[0] === "string") alreadyWarned[args[0]] = new Date();
-    warn(...args);
-}
+// Create a plain object of type T
+export const createPlainObject = <T = unknown>(): T => {
+    return Object.create(null);
+};
 
 /**
  * Binds keys and values provided in the `keys` and `values` into one object with respective key value pairs:
@@ -43,7 +40,7 @@ export const bindKeyValuePairs = <T extends number | string, K extends object>(
     values: readonly K[]
 ): Readonly<Record<string, T | K>> => {
     if (keys.length !== values.length) {
-        warn("Keys and values must be the same number");
+        console.warn("Keys and values must be the same number");
         return {};
     }
 
@@ -64,63 +61,21 @@ export const bindKeyValuePairs = <T extends number | string, K extends object>(
 
 /**
  * Initial array's mask array of booleans.
- * A value in mask array will be `true` if `array` contains `item`.
+ * A value in the mask array is `true` if `array` contains `item`.
+ * @example
+ * maskArray([1, 2, 3, 4], 2) -> [false, true, false, false]
  */
 export const maskArray = <T>(array: readonly T[], item: T) => {
     const rtn = new Array<boolean>(array.length).fill(false);
 
     if (!array.includes(item)) {
-        warn(`\`${item}\` does not exists in \`[${array}]\``);
+        console.warn(`\`${item}\` does not exists in \`[${array}]\``);
         return [];
     }
     rtn[array.indexOf(item)] = true;
 
     return rtn;
 };
-
-/**
- * Gets a value from `sourceObj` using dot notation in `key`. If the value is not found - `defaultValue` returned.
- *
- * @param sourceObj - Iterable object
- * @param key - A string of `sourceObj` keys, separated with '.'
- * @param defaultValue - A default value if nothing was found
- * @param mustReturnFinalValue - Either return the last obtained object or the final value in a object tree
- */
-export function getByDotNotation<T extends Record<string, any>, Key extends string, Value = unknown>(
-    sourceObj: T,
-    key: Key,
-    defaultValue?: Value,
-    mustReturnFinalValue?: boolean
-): T | T[Key] | Value | null {
-    let stack = sourceObj;
-
-    if (!key.includes(".")) {
-        warn("You need to use a dot notation, i.e. 'one.two.three'");
-        return null;
-    }
-    const keys = key.split(".");
-
-    for (const s of keys) {
-        // If a property does not exists, warn and return either defaultValue or the last obtained stack object
-        if (!stack.hasOwnProperty(s)) {
-            warnOnce(`Namespace '${s}' does not exist`);
-
-            return defaultValue ? defaultValue : mustReturnFinalValue ? null : stack;
-        }
-        stack = stack[s];
-    }
-
-    keys.forEach((s) => {});
-
-    if (mustReturnFinalValue && typeof stack !== "string") {
-        warn(
-            `You are returning a nested object, though \`mustReturnFinalValue\` was provided. Choose a valid namespace that returns a final value in the object tree`
-        );
-        return null;
-    }
-
-    return stack;
-}
 
 /**
  * Takes rank of the card and normalizes to the corresponding number:
@@ -139,38 +94,69 @@ export function normalizedRank(rank: CardRank): number {
     return 14; // ace
 }
 
-/**
- * Detects whether the `element` (can be also cursor) entered the `region` viewport.
- * @param expand - Defines the expand of the region (in px), where collision starts to be detected.
- */
-export const detectCollision = (
-    element: HTMLElement | { x: number; y: number },
-    region: HTMLElement,
-    expand: number = 0
-) => {
-    const elementRect =
-        element instanceof HTMLElement
-            ? element.getBoundingClientRect()
-            : Object.assign(element, { width: 0, height: 0 });
-    const regionRect = region.getBoundingClientRect();
+export namespace DotNotation {
+    /**
+     * Gets a value from `sourceObj` using dot notation in `key`. If the value is not found - `defaultValue` returned.
+     *
+     * @param sourceObj - Iterable object
+     * @param key - A string of `sourceObj` keys, separated with '.'
+     * @param defaultValue - A default value if nothing was found
+     * @param mustReturnFinalValue - Either return the last obtained object or the final value in a object tree
+     */
+    export const getByDotNotation = <Obj extends Record<string, any>, Key extends string, Value = unknown>(
+        sourceObj: Obj,
+        key: Key,
+        defaultValue?: Value,
+        mustReturnFinalValue?: boolean
+    ): Obj | Obj[Key] | Value | null => {
+        let stack = sourceObj;
 
-    return !(
-        elementRect.y + elementRect.height < regionRect.y + expand ||
-        elementRect.y > regionRect.y + regionRect.height - expand ||
-        elementRect.x + elementRect.width < regionRect.x + expand ||
-        elementRect.x > regionRect.x + regionRect.width - expand
-    );
-};
+        if (!key.includes(".")) return sourceObj[key];
 
-export const formatTime = (timer: number) => {
-    const extractSeconds = `0${timer % 60}`.slice(-2);
-    const minutes = Math.floor(timer / 60);
-    const extractMinutes = `0${minutes % 60}`.slice(-2);
-    const extractHours = `${Math.floor(timer / 3600)}`.slice(-2);
+        const keys = key.split(".");
 
-    return `${extractHours}:${extractMinutes}:${extractSeconds}`;
-};
+        for (const s of keys) {
+            // If a property does not exists, warn and return either defaultValue or the last obtained stack object
+            if (!stack.hasOwnProperty(s)) {
+                console.warn(`Namespace '${s}' does not exist`);
 
-export const excludeObjectProps = <T extends object>(object: T, ...props: (keyof T)[]) => {
-    return Object.fromEntries(Object.entries(object).filter(([key]) => !props.includes(key as keyof T)));
-};
+                return defaultValue ? defaultValue : mustReturnFinalValue ? null : stack;
+            }
+            stack = stack[s];
+        }
+
+        if (mustReturnFinalValue && typeof stack !== "string") {
+            console.warn(
+                `You are returning a nested object, though \`mustReturnFinalValue\` was provided. Choose a valid namespace that returns a final value in the object tree`
+            );
+            return null;
+        }
+
+        return stack;
+    };
+
+    /**
+     * Set the property at the given path to the given value. If the property already exists, updates its value.
+     *
+     * @param object - Object to set the `path` value.
+     * @param path - Path of the property in the object, using `.` to separate each nested key.
+     * @param value - Value to set at `path`.
+     * @returns The object
+     */
+    export const setByDotNotation = <Obj extends Record<string, any>>(object: Obj, path: string, value: unknown): Obj => {
+        const root = object;
+        const keys = path.split(".");
+
+        for (let index = 0; index < keys.length; index++) {
+            const currentKey = keys[index] as keyof Obj;
+
+            if (index === keys.length - 1) {
+                object[currentKey] = value as any;
+            }
+
+            object = object[currentKey];
+        }
+
+        return root;
+    };
+}

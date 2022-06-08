@@ -1,12 +1,16 @@
 import React from "react";
-
 import useMountTransition from "@utils/hooks/useMountTransition";
 
 import "./Alert.scss";
 
 interface IAlert {
+    /** Set to `true` to mount alert */
     isMounted: boolean;
+
+    /** Set to `true` to show be default */
     isDefaultShown?: boolean;
+
+    /** Message to display */
     msg: string;
 }
 

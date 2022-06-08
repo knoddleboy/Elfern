@@ -1,22 +1,29 @@
 import React, { useState, useRef, useEffect } from "react";
 
 import AudioClick from "@components/AudioClick";
-import { APPLICATION_MEDIA } from "@constants/global";
+import { APPLICATION_MEDIA } from "@src/constants";
 
 import "./Switch.scss";
 
 interface ISwitch {
+    /** Switch size */
     size?: number;
+
+    /** Action to execute on switch change */
     onChange?: () => void;
+
+    /** Defines wether the switch is checked bu default */
     defaultChecked?: boolean;
 }
 
+/** Switch component */
 const Switch: React.FC<ISwitch> = ({ size, onChange, defaultChecked }) => {
     const [switchState, setSwitchState] = useState(defaultChecked || false);
     const inputRef = useRef<HTMLInputElement>(null);
     const trackRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        // Add focus styles to the switch's button when navigating with Tab
         function addThumbFocus(e: KeyboardEvent) {
             if (!(e.key === "Tab")) return;
             if (trackRef.current && document.activeElement === inputRef.current) {
@@ -24,9 +31,12 @@ const Switch: React.FC<ISwitch> = ({ size, onChange, defaultChecked }) => {
             }
         }
 
+        // Remove switch's thumb focus when click outside the switch or press any key except for Enter and Space
         function removeThumbFocus(e: Event | KeyboardEvent) {
-            // Omit Enter and Space since they don't
+            // Omit Enter and Space keys
             if (e instanceof KeyboardEvent && (e.key === "Enter" || e.key === " ")) return;
+
+            // If the active document element is the switch's thumb, remove focus styles
             if (trackRef.current && document.activeElement === inputRef.current) {
                 trackRef.current.classList.remove("switch-focused");
             }
@@ -45,6 +55,8 @@ const Switch: React.FC<ISwitch> = ({ size, onChange, defaultChecked }) => {
 
     const handleChange = () => {
         setSwitchState((prevState) => !prevState);
+
+        // Execute function on switch change
         if (onChange) onChange();
     };
 

@@ -1,7 +1,5 @@
 export interface ConfigOptions<T extends Record<string, any>> {
-    /**
-     * Default values used when creating a new config file.
-     */
+    /** Options that will be created along with the config */
     defaults?: T;
 
     /**
@@ -17,12 +15,6 @@ export interface ConfigOptions<T extends Record<string, any>> {
      * @default system config directory
      */
     cwd?: string;
-
-    /**
-     * Extension of the config file.
-     * @default "json"
-     */
-    fileExtension?: string;
 
     /**
      * Access nested properties by dot notation.

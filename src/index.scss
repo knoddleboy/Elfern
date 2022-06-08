@@ -115,11 +115,15 @@
         font-family: "English Towne";
     }
 
+    .text-sm-adapt {
+        @apply text-sm font-normal lg:text-base;
+    }
+
     .text-base-adapt {
         @apply text-base font-normal lg:text-lg;
     }
 
-    .text-sm-adapt {
-        @apply text-sm font-normal lg:text-base;
+    .text-3xl-adapt {
+        @apply text-3xl lg:text-4xl;
     }
 }

@@ -1,10 +1,10 @@
-import { ModelHEX, ModelRGB, ModelRGBA } from "@src/types";
+import { ModelHEX, ModelRGB, ModelRGBA } from "./utility-types";
 
-export const SUITS = [7, 8, 9, 10, "jack", "queen", "king", "ace"] as const;
-export const RANKS = ["clubs", "diamonds", "hearts", "spades"] as const;
+export const RANKS = [7, 8, 9, 10, "jack", "queen", "king", "ace"] as const;
+export const SUITS = ["clubs", "diamonds", "hearts", "spades"] as const;
 
-export type CardRank = typeof SUITS[number];
-export type CardSuit = typeof RANKS[number];
+export type CardRank = typeof RANKS[number];
+export type CardSuit = typeof SUITS[number];
 
 export interface ICardLinkerProps {
     /** Defines card suit to be displayed */

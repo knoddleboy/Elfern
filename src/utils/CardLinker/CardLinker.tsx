@@ -67,7 +67,7 @@ const CardLinker: React.FC<
             {...otherProps}
             ref={linkerRef}
         >
-            {/* Reader either shirt or card component */}
+            {/* Render either shirt or card component */}
             {isShirt ? (
                 <svg
                     viewBox="0 0 138.71481 200"
@@ -93,7 +93,7 @@ const CardLinker: React.FC<
                             marginRight: cardLinkerAPI.cardRankSuitAdjustmentMargins,
                         }}
                     >
-                        {/* Renders card's rank */}
+                        {/* Render card's rank */}
                         <svg
                             fill={suitColor === "black" ? SuitColors.Black : SuitColors.Red}
                             style={{
@@ -104,51 +104,35 @@ const CardLinker: React.FC<
                             <use
                                 href={
                                     Sprite +
-                                    `#${
-                                        typeof rank === "string"
-                                            ? cyrillic
-                                                ? "cy-" + rank
-                                                : rank
-                                            : "_" + rank
-                                    }`
+                                    `#${typeof rank === "string" ? (cyrillic ? "cy-" + rank : rank) : "_" + rank}`
                                 }
                                 width={cardLinkerAPI.cardRankSuitSize}
                             />
                         </svg>
 
-                        {/** Renders card's suit */}
+                        {/** Render card's suit */}
                         <svg
                             style={{
                                 maxWidth: cardLinkerAPI.cardRankSuitSize,
                                 maxHeight: cardLinkerAPI.cardRankSuitSize,
                             }}
                         >
-                            <use
-                                href={Sprite + `#${suit}`}
-                                width={cardLinkerAPI.cardRankSuitSize}
-                            />
+                            <use href={Sprite + `#${suit}`} width={cardLinkerAPI.cardRankSuitSize} />
                         </svg>
                     </div>
 
-                    {/** Renders card's rank's figure */}
+                    {/** Render card's rank's figure */}
                     <svg
                         style={{
                             maxWidth: cardLinkerAPI.cardFigureSize,
                             height: cardLinkerAPI.cardFigureSize,
                             margin: "0 auto",
-                            transform: `scale(${
-                                rank !== "ace" && typeof rank === "string" ? 1 : 0.9
-                            })`,
+                            transform: `scale(${rank !== "ace" && typeof rank === "string" ? 1 : 0.9})`,
                         }}
                     >
                         <use
                             href={
-                                Sprite +
-                                `#${
-                                    rank !== "ace" && typeof rank === "string"
-                                        ? suitColor + "-" + rank
-                                        : suit
-                                }`
+                                Sprite + `#${rank !== "ace" && typeof rank === "string" ? suitColor + "-" + rank : suit}`
                             }
                         />
                     </svg>

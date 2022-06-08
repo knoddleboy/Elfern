@@ -19,3 +19,5 @@ export default class Deck {
         return _.shuffle(deck);
     };
 }
+
+export type TDeck = ReturnType<typeof Deck.createDeck>;
