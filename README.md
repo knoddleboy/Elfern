@@ -1,4 +1,10 @@
-# Elfern
+# **Elfern**: Basics of Programming Coursework (2022) or Dumbest Game I've Ever Made
+
+<img src="metadata/preview.png" alt="preview" style="width:400px;"/>
+
+## Description
+
+---
 
 _Elfern_ is an old game coming from Germany. The German word _"elfern"_ translates as _"making eleven"_, which describes the minimum target score for winning the hand - 11 points.
 
@@ -45,3 +51,16 @@ If any player manages to score
 > If both players win 10 honors during the hand, it is considered that there is no winner in this hand _(**stender**)_.
 
 After the chosen amount of time or the number of games (rounds), the player who scored the highest number of points is declared the winner of the game.
+
+## Gallery
+
+<img src="metadata/settings.png" alt="preview" style="width:400px;"/>
+<img src="metadata/gameplay.png" alt="preview" style="width:400px;"/>
+<img src="metadata/quit.png" alt="preview" style="width:400px;"/>
+<img src="metadata/scores.png" alt="preview" style="width:400px;"/>
+<img src="metadata/winscreen.png" alt="preview" style="width:400px;"/>
+<img src="metadata/losescreen.png" alt="preview" style="width:400px;"/>
+
+## License
+
+Elfern is licensed under the [MIT License](LICENSE)
