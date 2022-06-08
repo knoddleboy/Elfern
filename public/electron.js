@@ -1,13 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
-
-const Store = require("../src/utils/Store/index");
-// const { globalSettings } = require("../src/configs");
+const __DEV__ = require("electron-is-dev");
 
 require("@electron/remote/main").initialize();
-Store.initRenderer();
-
-// let transferredStore = {};
 
 const createWindow = () => {
     // Create the browser window.
@@ -27,11 +22,12 @@ const createWindow = () => {
 
     // mainWindow.resizable = false;
 
-    // Load the index.html of the app.
-    mainWindow.loadURL("http://localhost:3000");
-
-    // Open the DevTools.
-    mainWindow.webContents.openDevTools();
+    if (__DEV__) {
+        mainWindow.loadURL("http://localhost:3000"); // Load from localhost the index.html
+        mainWindow.webContents.openDevTools(); // Open the DevTools
+    } else {
+        mainWindow.loadURL(`file://${path.join(__dirname, "../build/index.html")}`);
+    }
 
     mainWindow.on("maximize", () => {
         mainWindow.webContents.send("window-maximized");
@@ -58,9 +54,9 @@ const createWindow = () => {
         mainWindow.close();
     });
 
-    // ipcMain.on("dispatch-main-store", (e, arg) => {
-    //     Object.assign(transferredStore, arg);
-    // });
+    ipcMain.on("store-get-app-data", (event) => {
+        event.returnValue = app.getPath("userData");
+    });
 };
 
 /**
@@ -88,8 +84,3 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") app.quit();
 });
-
-/* The rest of app's specific main process code */
-// app.on("will-quit", () => {
-//     globalSettings.set(transferredStore);
-// });
