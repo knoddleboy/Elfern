@@ -14,7 +14,7 @@ The aim of the game is to score as many honors as possible.
 
 > The minimum for winning is 11 honors.
 
-Thus, after each bribe has been played, players review the cards they managed to catch during the deal.
+Thus, after each bribe has been played, players review the cards they managed to catch during the deal and count how many points they earned (see Scoring).
 
 ## The gameplay
 

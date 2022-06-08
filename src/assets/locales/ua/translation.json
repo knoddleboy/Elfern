@@ -36,13 +36,13 @@
     "pop-up": {
         "incomp-suits": "Масті відрізняються",
         "player-no-card": "Ви не маєте карт, щоб відповісти",
-        "opponent-no-card": "Противник не має карт, щоб відповісти"
+        "opponent-no-card": "Суперник не має карт, щоб відповісти"
     },
     "scoring": {
         "title": "Кінець раунду:",
         "side": {
             "player": "Ви",
-            "opponent": "Супротивник"
+            "opponent": "Суперник"
         },
         "pictured-ranks": {
             "jack": "В",
@@ -50,6 +50,7 @@
             "king": "К",
             "ace": "Т"
         },
+        "summary": "Всього онерів:",
         "btn": "Наступний раунд"
     },
     "saved-progress-warning": {

@@ -28,8 +28,8 @@
         "confirm-button": "Anfangen"
     },
     "game-end": {
-        "win": "Du gewinnst!",
-        "lose": "Du verlierst!",
+        "win": "Sieg!",
+        "lose": "Verlust!",
         "points": "Punkte:",
         "time": "Zeit:"
     },
@@ -50,6 +50,7 @@
             "king": "K",
             "ace": "A"
         },
+        "summary": "Ehren insgesamt:",
         "btn": "Nächste Runde"
     },
     "saved-progress-warning": {

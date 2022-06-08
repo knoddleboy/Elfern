@@ -50,6 +50,7 @@
             "king": "K",
             "ace": "A"
         },
+        "summary": "Total honors:",
         "btn": "Next round"
     },
     "saved-progress-warning": {
