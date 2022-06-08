@@ -2,8 +2,9 @@ import React from "react";
 
 import useTranslation from "@src/utils/hooks/useTranslation";
 
-import StyledButton from "@components/StyledButton";
+import CustomButton from "@components/CustomButton";
 
+/** Window to notify a user about save game progress */
 const SavedProgressNotification: React.FC<{ handleCancel: () => void; handleRestore: () => void }> = ({
     handleCancel,
     handleRestore,
@@ -19,12 +20,12 @@ const SavedProgressNotification: React.FC<{ handleCancel: () => void; handleRest
                 {t("saved-progress-warning.desc.1")}
             </p>
             <div className="flex justify-around">
-                <StyledButton className="dialog-close" onClick={handleCancel}>
+                <CustomButton className="dialog-close" onClick={handleCancel} stylish>
                     {t("saved-progress-warning.btns.cancel")}
-                </StyledButton>
-                <StyledButton className="dialog-close" onClick={handleRestore}>
+                </CustomButton>
+                <CustomButton className="dialog-close" onClick={handleRestore} stylish>
                     {t("saved-progress-warning.btns.restore")}
-                </StyledButton>
+                </CustomButton>
             </div>
         </div>
     );
