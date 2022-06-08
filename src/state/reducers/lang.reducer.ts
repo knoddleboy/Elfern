@@ -1,15 +1,12 @@
 import { Action } from "../actions";
 import { ActionType } from "../action-types";
-import { AvailableCountryCodes } from "@src/types";
+import { globalSettings } from "@src/configs";
 
-import TransferStore from "@state/transferStore";
-
-const INITIAL_STATE: AvailableCountryCodes = TransferStore.get("LANGUAGE") as AvailableCountryCodes;
+const INITIAL_STATE = globalSettings.get("LANGUAGE");
 
 const langReducer = (state = INITIAL_STATE, action: Action) => {
     switch (action.type) {
         case ActionType.LANGUAGE:
-            TransferStore.send({ LANGUAGE: action.payload });
             return action.payload;
         default:
             return state;

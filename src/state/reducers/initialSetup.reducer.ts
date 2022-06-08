@@ -1,14 +1,13 @@
 import { Action } from "../actions";
 import { ActionType } from "../action-types";
+import { activeSession } from "@src/configs";
 
-import TransferStore from "@state/transferStore";
-
-const INITIAL_STATE: boolean = TransferStore.get("INITIAL_SETUP");
+const INITIAL_STATE = activeSession.get("INITIAL_SETUP");
 
 const initialSetupReducer = (state = INITIAL_STATE, action: Action) => {
     switch (action.type) {
         case ActionType.IS_INITIAL_SETUP:
-            TransferStore.send({ INITIAL_SETUP: !state });
+            if (action.payload) return action.payload;
             return !state;
         default:
             return state;

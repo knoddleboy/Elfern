@@ -1,14 +1,13 @@
 import { Action } from "../actions";
 import { ActionType } from "../action-types";
+import { globalSettings } from "@src/configs";
 
-import TransferStore from "@state/transferStore";
-
-const INITIAL_STATE: boolean = TransferStore.get("ENABLE_AUDIO");
+const INITIAL_STATE = globalSettings.get("ENABLE_AUDIO");
 
 const audioReducer = (state = INITIAL_STATE, action: Action) => {
     switch (action.type) {
         case ActionType.ENABLE_AUDIO:
-            TransferStore.send({ ENABLE_AUDIO: !state });
+            if (action.payload) return action.payload;
             return !state;
         default:
             return state;

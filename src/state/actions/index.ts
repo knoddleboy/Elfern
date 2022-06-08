@@ -1,50 +1,40 @@
 import { ActionType } from "../action-types";
-import { AvailableCountryCodes } from "@src/types";
+import { IGlobalSettingsDefaults, IActiveSessionDefaults } from "@src/configs/types";
 
-interface IToggleAudio {
+export interface IToggleAudio {
     type: ActionType.ENABLE_AUDIO;
+    payload?: boolean;
 }
 
 export interface ISetTranslation {
     type: ActionType.LANGUAGE;
-    payload: AvailableCountryCodes;
+    payload: IGlobalSettingsDefaults["LANGUAGE"];
 }
 
-export interface ISetRoundStats {
-    type: ActionType.ROUND_STATS;
-    payload: {
-        current: number;
-        max: number;
-    };
-}
-
-interface IToggleInitialSetup {
+export interface IToggleInitialSetup {
     type: ActionType.IS_INITIAL_SETUP;
+    payload?: boolean;
 }
 
-export interface ISetTimerState {
-    type: ActionType.TIMER_STATE;
-    payload: {
-        time: number;
-        start: boolean;
-        pause: boolean;
-        resume: boolean;
-        reset: boolean;
-    };
+export interface ISetStoreSessionSignal {
+    type: ActionType.STORE_SESSION_SIGNAL;
+    payload: boolean;
 }
 
-export interface ISetCurrentScore {
-    type: ActionType.CURRENT_SCORE;
-    payload: {
-        player: number;
-        opponent: number;
-    };
+export interface ISetProgress {
+    type: ActionType.PROGRESS;
+    payload: IActiveSessionDefaults["PROGRESS"];
+}
+
+export interface ISetStats {
+    type: ActionType.STATS;
+    payload: IActiveSessionDefaults["STATS"];
 }
 
 export type Action =
     | IToggleAudio
     | ISetTranslation
-    | ISetRoundStats
     | IToggleInitialSetup
-    | ISetTimerState
-    | ISetCurrentScore;
+    | ISetStoreSessionSignal
+    | ISetProgress
+    | ISetStats;

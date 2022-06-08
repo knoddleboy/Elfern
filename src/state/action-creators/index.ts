@@ -1,17 +1,17 @@
 import { Dispatch } from "redux";
-import { Action, ISetRoundStats, ISetTimerState, ISetCurrentScore } from "../actions";
+import { Action, ISetTranslation, ISetStoreSessionSignal, ISetProgress, ISetStats } from "../actions";
 import { ActionType } from "../action-types";
-import { AvailableCountryCodes } from "@src/types";
 
-export const toggleAudio = () => {
+export const toggleAudio = (state?: boolean) => {
     return (dispatch: Dispatch<Action>) => {
         dispatch({
             type: ActionType.ENABLE_AUDIO,
+            payload: state,
         });
     };
 };
 
-export const setTranslation = (languageCode: AvailableCountryCodes) => {
+export const setTranslation = (languageCode: ISetTranslation["payload"]) => {
     return (dispatch: Dispatch<Action>) => {
         dispatch({
             type: ActionType.LANGUAGE,
@@ -20,37 +20,38 @@ export const setTranslation = (languageCode: AvailableCountryCodes) => {
     };
 };
 
-export const setRoundStats = (roundStats: ISetRoundStats["payload"]) => {
-    return (dispatch: Dispatch<Action>) => {
-        dispatch({
-            type: ActionType.ROUND_STATS,
-            payload: roundStats,
-        });
-    };
-};
-
-export const toggleInitialSetup = () => {
+export const toggleInitialSetup = (state?: boolean) => {
     return (dispatch: Dispatch<Action>) => {
         dispatch({
             type: ActionType.IS_INITIAL_SETUP,
+            payload: state,
         });
     };
 };
 
-export const setTimerState = (timerState: ISetTimerState["payload"]) => {
+export const setStoreSessionSignal = (session: ISetStoreSessionSignal["payload"]) => {
     return (dispatch: Dispatch<Action>) => {
         dispatch({
-            type: ActionType.TIMER_STATE,
-            payload: timerState,
+            type: ActionType.STORE_SESSION_SIGNAL,
+            payload: session,
         });
     };
 };
 
-export const setCurrentScore = (currentScore: ISetCurrentScore["payload"]) => {
+export const setProgress = (progress: ISetProgress["payload"]) => {
     return (dispatch: Dispatch<Action>) => {
         dispatch({
-            type: ActionType.CURRENT_SCORE,
-            payload: currentScore,
+            type: ActionType.PROGRESS,
+            payload: progress,
+        });
+    };
+};
+
+export const setStats = (stats: ISetStats["payload"]) => {
+    return (dispatch: Dispatch<Action>) => {
+        dispatch({
+            type: ActionType.STATS,
+            payload: stats,
         });
     };
 };

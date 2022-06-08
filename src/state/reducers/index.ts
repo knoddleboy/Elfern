@@ -1,18 +1,18 @@
 import { combineReducers } from "redux";
 import audioReducer from "./audio.reducer";
 import langReducer from "./lang.reducer";
-import roundStatsReducer from "./roundStats.reducer";
 import initialSetupReducer from "./initialSetup.reducer";
-import timerStateReducer from "./timerState.reducer";
-import currentScoreReducer from "./currentScore.reducer";
+import storeSessionSignalReducer from "./storeSessionSignal.reducer";
+import progressReducer from "./progress.reducer";
+import statsReducer from "./stats.reducer";
 
 const reducers = combineReducers({
     ENABLE_AUDIO: audioReducer,
     LANGUAGE: langReducer,
-    ROUND_STATS: roundStatsReducer,
     INITIAL_SETUP: initialSetupReducer,
-    TIMER_STATE: timerStateReducer,
-    CURRENT_SCORE: currentScoreReducer,
+    STORE_SESSION_SIGNAL: storeSessionSignalReducer,
+    PROGRESS: progressReducer,
+    STATS: statsReducer,
 });
 
 export type State = ReturnType<typeof reducers>;
