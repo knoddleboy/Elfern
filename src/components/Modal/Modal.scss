@@ -1,5 +1,3 @@
-@import "../../shared/mixins/sass-mixins.scss";
-
 /* MODAL CONTENT PRE-FADE-STYLES */
 
 .modal-content {
@@ -30,7 +28,7 @@
             }
         }
 
-        @include forward-animation(bounce-in, 0.3s, ease);
+        animation: bounce-in 0.3s ease forwards;
     }
 }
 
@@ -49,7 +47,7 @@
             }
         }
 
-        @include forward-animation(scale-out, 0.3s, ease);
+        animation: scale-out 0.3s ease forwards;
     }
 }
 

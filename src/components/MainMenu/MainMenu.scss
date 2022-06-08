@@ -1,12 +1,9 @@
-@import "../../shared/mixins/sass-mixins.scss";
-
 // Play button :hover and :active animations
 .PlayButton {
     position: relative;
     display: inline-block;
     transform-style: preserve-3d;
-    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1),
-        background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
 
     // 3D shadow
     &::before {
@@ -21,8 +18,7 @@
         border-radius: inherit;
         background-color: #005382;
         transform: translate3d(0, 10%, -1em);
-        transition: transform 150ms cubic-bezier(0, 0, 0.58, 1),
-            background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
+        transition: transform 150ms cubic-bezier(0, 0, 0.58, 1), background-color 100ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     &:hover {
@@ -60,8 +56,7 @@
         }
     }
 
-    @include forward-animation(menu-out, 1s, ease-out-circ);
-    animation-delay: 0.38s;
+    animation: menu-out 1s ease 0.38s forwards;
 
     // Set delay on each card
     #card-container {
@@ -87,7 +82,8 @@
                         transform: rotate(#{nth($degrees-list, $i) - 60}deg) translateX(-50%);
                     }
                 }
-                @include forward-animation(#{$side}-cards-out, 1s, ease-out-circ);
+
+                animation: #{$side}-cards-out 1s ease forwards;
             }
         }
     }
@@ -104,45 +100,8 @@
         @include cards-out-animation(right, $degrees);
     }
 
-    // ------- BACKUP ------- //
-
-    // Left hand side cards fade out animation
-    // .left-cards {
-    //     $degrees: 60 70 90;
-
-    //     @for $i from 1 through 3 {
-    //         #card-container:nth-child(#{$i}) {
-    //             @keyframes left-cards-out {
-    //                 30% {
-    //                     transform: rotate(#{nth($degrees, $i) + 5}deg) translateX(5%);
-    //                 }
-    //                 100% {
-    //                     transform: rotate(#{nth($degrees, $i) - 60}deg) translateX(-50%);
-    //                 }
-    //             }
-
-    //             @include forward-animation(left-cards-out, 1s, ease-out-circ);
-    //         }
-    //     }
-    // }
-
-    // Right hand side cards fade out animation
-    // .right-cards {
-    //     $degrees: -120 -110 -90;
-
-    //     @for $i from 1 through 3 {
-    //         #card-container:nth-child(#{$i}) {
-    //             @keyframes right-cards-out {
-    //                 30% {
-    //                     transform: rotate(#{nth($degrees, $i) + 5}deg) translateX(5%);
-    //                 }
-    //                 100% {
-    //                     transform: rotate(#{nth($degrees, $i) - 60}deg) translateX(-50%);
-    //                 }
-    //             }
-
-    //             @include forward-animation(right-cards-out, 1s, ease-out-circ);
-    //         }
-    //     }
-    // }
+    span {
+        transition: opacity 0.625s ease;
+        opacity: 0;
+    }
 }

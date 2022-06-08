@@ -1,5 +1,3 @@
-@import "../../shared/mixins/sass-mixins.scss";
-
 .GameInterface--in-animation {
     @keyframes interface-in {
         0% {
@@ -10,7 +8,7 @@
         }
     }
 
-    @include forward-animation(interface-in, 0.3s, linear);
+    animation: interface-in 0.3s linear forwards;
 }
 
 .Stock--in-animation {
@@ -28,8 +26,7 @@
                 }
             }
 
-            @include none-fill-animation(stock-in, 0.5s, cubic-bezier(0.29, 0.1, 0.34, 0.99));
-            animation-delay: #{$i * 0.003}s;
+            animation: stock-in 0.5s cubic-bezier(0.29, 0.1, 0.34, 0.99) #{$i * 0.003}s;
         }
     }
 }
@@ -37,11 +34,6 @@
 #Stock__underlay {
     font-size: 5vw;
     font-family: "English Towne";
-}
-
-.deal-active {
-    transition: filter 75ms linear;
-    filter: brightness(115%);
 }
 
 .WinningSideArrow {
@@ -53,6 +45,5 @@
         }
     }
 
-    @include forward-animation(arrow-in, 0.5s, ease);
-    animation-delay: 0.5s;
+    animation: arrow-in 0.5s ease 0.5s forwards;
 }
