@@ -1,0 +1,37 @@
+table {
+    tbody {
+        &::before {
+            content: "";
+            display: table-row;
+            height: 0.75em;
+        }
+
+        tr > th {
+            color: var(--dark-300);
+            font-weight: 500;
+        }
+
+        #table-summary {
+            @apply sm:text-sm lg:text-base;
+            filter: brightness(1.5);
+
+            & > th {
+                padding-top: 0.375em;
+            }
+        }
+    }
+
+    &.counting-end {
+        tbody tr:not(#table-summary) > th:nth-child(-n + 3) {
+            transition: filter 0.2s ease-out;
+            filter: brightness(1.5);
+        }
+    }
+
+    thead,
+    tbody {
+        tr:not(#table-summary) > th {
+            @apply sm:text-base lg:text-lg;
+        }
+    }
+}
