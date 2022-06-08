@@ -1,33 +1,48 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
 import { bindActionCreators } from "redux";
 import { actionCreators, State } from "@state/index";
 
+import useTranslation from "@utils/hooks/useTranslation";
+import useAudio from "@utils/hooks/useAudio";
+
 import StartBlinkingTitle from "./StartBlinkingTitle";
-import PlayAreaSidebarButtons from "./PlayAreaSidebarButtons";
+import NewGameButton from "./NewGameButton";
 import Alert from "./Alert";
 import Modal from "@components/Modal";
-import Scoring, { IHonors } from "./Scoring";
+import ScoreBoard, { IHonors } from "./ScoreBoard";
 
 import CardLinker from "@utils/CardLinker";
 import CardLinkerAPI from "@utils/CardLinker/CardLinkerAPI";
 import Deck from "@utils/generateDeck";
-
-import useTranslation from "@utils/hooks/useTranslation";
-import useAudio from "@utils/hooks/useAudio";
-
-import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
+import { choosePlayingCard, chooseOpposingCard } from "./scripts";
+import { expandCards, resetExpandCards } from "./scripts/utils";
 
 import _ from "@utils/_";
-import { normalizedRank, detectCollision } from "@utils/utils";
+import { normalizedRank } from "@utils/utils";
 
-import { CARDS_IN_DECK, APPLICATION_MEDIA, CARDS_WITHOUT_SQUEEZING, NO_CARD_AVAILABLE } from "@constants/global";
+import {
+    CARDS_IN_DECK,
+    APPLICATION_MEDIA,
+    CARDS_WITHOUT_SQUEEZING,
+    NO_CARD_AVAILABLE,
+    ALERT_VISIBLE_TIME,
+    CARD_FLIP_SOUND_DELAY,
+    ADD_CARDS_FROM_STOCK_DELAY,
+    DEFINE_WINNING_SIDE_CLEARING,
+    CARDS_IN_DEAL_DURATION,
+    SHOW_SCORING_WIN_DELAY,
+} from "@src/constants";
 
 import "./GameInterface.scss";
 
-const CARD_SIZE = 8;
-let deck = Deck.createDeck();
+/**************************************
+ *               Globals              *
+ *************************************/
+
+const CARD_SIZE = 8; // Card size, that depends on the window size
+let deck = Deck.createDeck(); // Generated deck
 
 // Each of above consists card indices (i.e. numbers)
 const holder = {
@@ -38,53 +53,51 @@ const holder = {
 
 let cardOpposingDelay = 0;
 
+// Here we hold all the timeouts to be able to clear them when starting a gew game
 const timeouts: NodeJS.Timeout[] = [];
 
-// const cardsTranslateX: { [key: number]: number } = {};
+// ...
 const cardsRawTranslateX: { [key: number]: { per: string; num: string } } = {};
 
-const GameInterface: React.FC = () => {
-    //* External state management
+const GameInterface: React.FC<{ restoreSession: boolean }> = ({ restoreSession }) => {
+    /**************************************
+     *           External state           *
+     *************************************/
+
     const dispatch = useDispatch();
-    const { setTimerState } = bindActionCreators(actionCreators, dispatch);
+    const { setProgress } = bindActionCreators(actionCreators, dispatch);
 
-    const roundStats = useSelector((state: State) => state.ROUND_STATS);
-    const timerState = useSelector((state: State) => state.TIMER_STATE);
-    const currentScore = useSelector((state: State) => state.CURRENT_SCORE);
+    const storeSessionSignal = useSelector((state: State) => state.STORE_SESSION_SIGNAL);
+    const sessionProgress = useSelector((state: State) => state.PROGRESS);
+    const sessionStats = useSelector((state: State) => state.STATS);
 
-    // Game reset state
-    const [gameResetState, setGameResetState] = useState(false);
+    // If we are restoring a session, grab deck and stock from the saved ones thus restoring the actual deck and stock
+    useEffect(() => {
+        if (restoreSession) {
+            deck = sessionProgress.DECK;
+            holder.stock = sessionProgress.HOLDER.stock;
+        }
+    }, [restoreSession]);
 
-    // Ref to the game interface (current component)
-    const gameInterfaceScreenRef = useRef<HTMLDivElement>(null);
+    /**************************************
+     *                Hooks               *
+     *************************************/
 
-    // Ref to the stock
-    const stockRef = useRef<HTMLDivElement>(null);
+    const { t, lang } = useTranslation(); // Obtain current language along with the lang toggler
+    const [playShuffleSound] = useAudio(APPLICATION_MEDIA.shuffle);
+    const [playFlipSound] = useAudio(APPLICATION_MEDIA.flip);
 
-    const playAreaRef = useRef<HTMLDivElement>(null);
+    /**************************************
+     *           DOM references           *
+     *************************************/
 
-    // Ref to the opponent hand area
-    const opponentHandRef = useRef<HTMLDivElement>(null);
-
-    // Ref to the player hand area
-    const playerHandRef = useRef<HTMLDivElement>(null);
-
-    // Ref to the player deal place
-    const playerDealRef = useRef<HTMLDivElement>(null);
-
-    // Ref to the opponent deal place
-    const opponentDealRef = useRef<HTMLDivElement>(null);
-
-    // State that defines when to start dealing cards
-    const [gameStartState, setGameStartState] = useState(false);
-
-    const cardLinkerAPI = new CardLinkerAPI(CARD_SIZE, { ref: gameInterfaceScreenRef });
-
-    const { t, lang } = useTranslation();
-
-    const [toggleShuffleSound] = useAudio(APPLICATION_MEDIA.shuffle);
-
-    const roundEnd = useRef(false);
+    const gameInterfaceScreenRef = useRef<HTMLDivElement>(null); // Ref to the game interface (current component)
+    const stockRef = useRef<HTMLDivElement>(null); // Ref to the stock
+    const playAreaRef = useRef<HTMLDivElement>(null); // Ref to the play area
+    const opponentHandRef = useRef<HTMLDivElement>(null); // Ref to the opponent hand area
+    const playerHandRef = useRef<HTMLDivElement>(null); // Ref to the player hand area
+    const playerDealRef = useRef<HTMLDivElement>(null); // Ref to the player deal place
+    const opponentDealRef = useRef<HTMLDivElement>(null); // Ref to the opponent deal place
 
     // Array of refs to each card in the stock
     const stockCardsRefs = useRef(new Array<HTMLDivElement>());
@@ -95,16 +108,13 @@ const GameInterface: React.FC = () => {
         if (currentCard && !stockCardsRefs.current.includes(currentCard)) stockCardsRefs.current.push(currentCard);
     };
 
-    // isShirt values of all cards
-    const [shirtStates, setShirtStates] = useState(deck.map(() => true));
+    /**************************************
+     *         Application states         *
+     *************************************/
 
-    const flipCard = (cardIndex: number) => {
-        setShirtStates((prevStates) =>
-            prevStates.map((state, i) => {
-                return i === cardIndex ? !state : state;
-            })
-        );
-    };
+    const [gameStartState, setGameStartState] = useState(false); // State that defines when to start dealing cards
+    const [gameResetState, setGameResetState] = useState(false); // Game reset state
+    const [shirtStates, setShirtStates] = useState(deck.map(() => true)); // isShirt values of all cards
 
     // Keeps track of the dealing card of both player and opponent
     const [dealingCard, setDealingCard] = useState<{
@@ -113,15 +123,83 @@ const GameInterface: React.FC = () => {
         origin: "player" | "opponent";
     } | null>(null);
 
-    // const [sideTurn, setSideTurn] = useState<"player" | "opponent">(_.randIntRange(0, 1) ? "player" : "opponent");
-    const [batchDealer, setBatchDealer] = useState<"player" | "opponent" | null>("player");
+    // On game start batch dealer could be opponent and unlike holder.opponent, whish is populating
+    // gradually (see SECTION 1), batchDealer is defined immediately on game start. But since cards are
+    // not dealt yet, opponent would try to play with a card, that does not exist. To resolve this problem,
+    // when all cards are dealt already, we set `cardsAreDealt` to `true` thus triggering useEffect
+    // (see SECTION 5) and telling opponent that cards are dealt now and he can play any he could choose.
+    const [cardsAreDealt, setCardsAreDealt] = useState(false);
 
-    const playerDealtCardIdx = useRef<number | null>();
-    const opponentDealtCardIdx = useRef<number | null>();
+    // const [batchDealer, setBatchDealer] = useState<"player" | "opponent" | null>(_.randIntRange(0, 1) ? "player" : "opponent");
+    const [batchDealer, setBatchDealer] = useState<"player" | "opponent" | null>("player"); //* <----
 
+    // While opponents move, player cannot move so we indicate that here
+    const [playerCanMove, setPlayerCanMove] = useState(batchDealer === "player");
+
+    // Since holder is a global variable, we cannot react on its change in useEffect,
+    // so we create a separate state handFlow, that holds the number of cards in a player hand.
+    // And when handFlow actually overflows the crucial number of cards in the hand
+    // (here crucial number is the number of cards, that can fit in the hand without overflowing it),
+    // we react on that and squeeze cards.
+    const [handFlow, setHandFlow] = useState({
+        player: 0,
+        opponent: 0,
+    });
+
+    // When `true`, show an alert telling no cards available
+    const [showPlayerNoCard, setShowPlayerNoCard] = useState(false);
+    const [showOpponentNoCard, setShowOpponentNoCard] = useState(false);
+
+    // When player tries to play a card with not the same suit as opponent's one
+    // (after stock is empty), show the corresponding message
+    const [showIncompatibleSuitMsg, setShowIncompatibleSuitMsg] = useState(false);
+
+    // Is true when either player or opponent don't have cards to play so the current rounds is over
+    // const roundEnd = useRef(false);
+    const [roundEndState, setRoundEndState] = useState(false);
+
+    /**************************************
+     *             References             *
+     *************************************/
+
+    const playerDealtCardIdx = useRef<number | null>(); // Card index that player dealt
+    const opponentDealtCardIdx = useRef<number | null>(); // Card index that opponent dealt
     const lastCardBy = useRef<"player" | "opponent">();
 
-    const [playerCanMove, setPlayerCanMove] = useState(batchDealer === "player");
+    const cardLinkerAPI = new CardLinkerAPI(CARD_SIZE, { ref: gameInterfaceScreenRef });
+
+    // Indicates the number of cards in the stock at the moment
+    const stockFlow = useRef(holder.stock.length);
+
+    const wasPlayerSqueezed = useRef(false); // Indicates wether player's hand was squeezed
+    const wasOpponentSqueezed = useRef(false); // Indicates wether opponent's hand was squeezed
+
+    /**************************************
+     *           Internal utils           *
+     *************************************/
+
+    const faceUp = (cardIndex: number) => {
+        setShirtStates((prevStates) => {
+            prevStates[cardIndex] = false;
+            return prevStates;
+        });
+    };
+
+    const faceDown = (cardIndex: number) => {
+        setShirtStates((prevStates) => {
+            prevStates[cardIndex] = false; // true
+            return prevStates;
+        });
+    };
+
+    /** Returns true is the `cardIndex` exists in holder.play (i.e. card is in the players hand) */
+    const isCardInPlayerHand = (cardIndex: number) => {
+        return holder.player.includes(cardIndex);
+    };
+
+    /**************************************
+     *           Update handlers          *
+     *************************************/
 
     // Any time when card falls into deal area (thus dealingCard changes), remove it from the origin hand
     useEffect(() => {
@@ -137,30 +215,28 @@ const GameInterface: React.FC = () => {
             lastCardBy.current = "opponent";
         }
 
+        // Since opponent's cards are not visible, show his card in the deal
+        faceUp(dealingCard.idx);
+
+        // Set default cursor for dealing card
         stockCardsRefs.current[dealingCard.idx].style.cursor = "default";
     }, [dealingCard]);
 
-    // Since holder is a global variable, we cannot react on its change in useEffect,
-    // so we create a separate state handFlow, that holds the number of cards in a player hand.
-    // And when handFlow actually overflows the crucial number of cards in the hand
-    // (here crucial number is the number of cards, that can fit in the hand without overflowing it),
-    // we react on that and squeeze cards.
-    const [handFlow, setHandFlow] = useState({
-        player: 0,
-        opponent: 0,
-    });
-
-    // Indicates the number of cards in the stock at the moment
-    const [stockFlow, setStockFlow] = useState<number>(holder.stock.length);
-
-    function squeezer(hand: "player" | "opponent" | React.RefObject<HTMLElement>) {
-        if (typeof hand === "string") {
-            const currentHand = hand === "player" ? holder.player : holder.opponent;
-            return currentHand.length < CARDS_WITHOUT_SQUEEZING ? 4 : 5;
+    // Set default cursor for all the player's cards when player cannot move them
+    useEffect(() => {
+        if (!playerCanMove) {
+            holder.player.forEach((cardIdx) => {
+                const card = stockCardsRefs.current[cardIdx];
+                card.style.cursor = "default";
+            });
         }
-        const currentHand = hand === playerHandRef ? holder.player : holder.opponent;
-        return currentHand.length < CARDS_WITHOUT_SQUEEZING ? 4 : 5;
-    }
+    }, [playerCanMove]);
+
+    /************************************\
+    *              SECTION 0             *
+    **************************************
+    *  Function to place card into hand  *
+    \************************************/
 
     const placeCardIntoHand = (
         cardsRefs: React.MutableRefObject<HTMLDivElement[]>,
@@ -168,36 +244,36 @@ const GameInterface: React.FC = () => {
         cardIndex: number,
         shouldMoveFromStock: boolean = true
     ) => {
-        if (holder.stock.length === 0) {
-            console.warn("⚠ The Card Stock is empty.");
-        }
+        if (holder.stock.length === 0) console.warn("⚠ The Card Stock is empty.", cardIndex);
 
         if (!(cardsRefs.current || handRef.current)) return;
 
-        let currentHand: number[];
+        let currentHand: number[]; // Either holder.player or holder.opponent
 
         // Move card's index number from stock array to either player or opponent's hand array
         if (handRef === playerHandRef) {
-            flipCard(cardIndex);
-            holder.player.push(cardIndex);
-            currentHand = holder.player;
+            faceUp(cardIndex); // Make cards face up in player's hand
+            holder.player.push(cardIndex); // Add current card index to holder
+            currentHand = holder.player; // Set working hand
 
             setHandFlow((prevState) => ({
                 ...prevState,
                 player: prevState.player + 1,
             }));
         } else {
-            holder.opponent.push(cardIndex);
-            currentHand = holder.opponent;
+            faceDown(cardIndex); // Make cards face down in opponent's hand
+            holder.opponent.push(cardIndex); // Add current card index to holder
+            currentHand = holder.opponent; // Set working hand
 
             setHandFlow((prevState) => ({
                 ...prevState,
                 opponent: prevState.opponent + 1,
             }));
         }
-        if (shouldMoveFromStock && stockFlow) {
-            holder.stock.pop();
-            setStockFlow((prev) => prev - 1);
+
+        if (shouldMoveFromStock && stockFlow.current) {
+            holder.stock.pop(); // Remove card from stock
+            stockFlow.current = stockFlow.current - 1; // Set stock flow one card less
         }
 
         const handRect = handRef.current!.getBoundingClientRect();
@@ -247,9 +323,50 @@ const GameInterface: React.FC = () => {
         }
     };
 
-    const [wasPlayerSqueezed, wasOpponentSqueezed] = [useRef(false), useRef(false)];
+    /************************************\
+    *              SECTION 1             *
+    **************************************
+    *     Dealing cards on game start    *
+    \************************************/
 
-    const squeezeHand = (observableHand: "player" | "opponent") => {
+    // Deal 6 cards for each player when a user starts the game
+    useEffect(() => {
+        if (!gameStartState) return;
+
+        // Play shuffle sound
+        playShuffleSound();
+
+        // If we are restoring session, grab cards to deal from the store
+        if (restoreSession) {
+            for (let i = 0; i < sessionProgress.HOLDER.player.length; i++) {
+                placeCardIntoHand(stockCardsRefs, playerHandRef, sessionProgress.HOLDER.player[i], false);
+            }
+            for (let i = 0; i < sessionProgress.HOLDER.opponent.length; i++) {
+                placeCardIntoHand(stockCardsRefs, opponentHandRef, sessionProgress.HOLDER.opponent[i], false);
+            }
+            setCardsAreDealt(true); // indicate that cards are dealt
+            return;
+        }
+
+        // Deal the last 6 cards (taking from the top of the deck) to the player
+        for (let i = 31; i >= 16; i--) {
+            placeCardIntoHand(stockCardsRefs, playerHandRef, i);
+        }
+
+        // Deal next 6 cards to the opponent
+        for (let i = 15; i >= 2; i--) {
+            placeCardIntoHand(stockCardsRefs, opponentHandRef, i);
+        }
+        setCardsAreDealt(true); // indicate that cards are dealt
+    }, [gameStartState]); // Execute only once i.e. when game starts
+
+     /************************************\
+     *              SECTION 2             *
+     **************************************
+     *    Managing cards layout display   *
+     \************************************/
+
+     const squeezeHand = (observableHand: "player" | "opponent") => {
         const [currentHand, observable, wasSqueezed] =
             observableHand === "player"
                 ? [holder.player, handFlow.player, wasPlayerSqueezed]
@@ -315,6 +432,8 @@ const GameInterface: React.FC = () => {
         }
     };
 
+    // Observe handFlow.player and .opponent to detect when either of them
+    // is big enough for overflow and if so, squeeze a hand
     useEffect(() => {
         squeezeHand("player");
     }, [handFlow.player]);
@@ -334,13 +453,12 @@ const GameInterface: React.FC = () => {
         if (!currentHand) return;
 
         const stock = stockCardsRefs.current;
-        // const handSqueezer = squeezer(dealingCard.origin);
 
         for (let i = dealingCard.idxInHand - 1; i >= 0; i--) {
             const card = stock[handCards[i]];
             const prevLeft = card.offsetLeft;
 
-            card.style.left = `${prevLeft + card.offsetWidth / (handCards.length < 16 ? 4 : 5)}px`;
+            card.style.left = `${prevLeft + card.offsetWidth / (handCards.length < CARDS_WITHOUT_SQUEEZING ? 4 : 5)}px`;
 
             // Sometimes when a card goes to a deal, the mouseLeave function does not executes thus resets in
             // this function does not strike. To address this issue we reset the transform here as well.
@@ -353,7 +471,7 @@ const GameInterface: React.FC = () => {
             const card = stock[handCards[i]];
             const prevLeft = card.offsetLeft;
 
-            card.style.left = `${prevLeft - card.offsetWidth / (handCards.length < 16 ? 4 : 5)}px`;
+            card.style.left = `${prevLeft - card.offsetWidth / (handCards.length < CARDS_WITHOUT_SQUEEZING ? 4 : 5)}px`;
 
             // Sometimes when a card goes to a deal, the mouseLeave function does not executes thus the resets in
             // this function does not strike. To address this issue we reset the transform here as well.
@@ -363,529 +481,144 @@ const GameInterface: React.FC = () => {
         }
     }, [dealingCard]);
 
-    const addCardToPlayerHand = () => () => {
-        // placeCardIntoHand(stockCardsRefs, playerHandRef, holder.stock[holder.stock.length - 1]);
-        // console.log(playerDealtCardIdx.current, opponentDealtCardIdx.current);
-        // console.log("Stock:", holder);
-        // console.log("Dealing card:", dealingCard);
-        console.log("Player H:", holder.player);
-    };
-
-    const addCardToOpponentHand = () => () => {
-        // placeCardIntoHand(stockCardsRefs, opponentHandRef, holder.stock[holder.stock.length - 1]);
-        // console.log(stockCardsRefs.current);
-        // console.log("Current batch dealer:", batchDealer);
-        console.log("Raw translates:", cardsRawTranslateX);
-        // console.log("Player H:", holder.opponent);
-    };
-
-    // Deal first 6 cards for each player
-    useEffect(() => {
-        if (gameStartState) {
-            // Deal the last 6 cards (counting from the top of the deck) to the player
-            for (let i = 31; i >= 2; i--) {
-                placeCardIntoHand(stockCardsRefs, playerHandRef, i);
-            }
-            // Deal next 6 cards to the opponent
-            for (let i = 1; i >= 0; i--) {
-                placeCardIntoHand(stockCardsRefs, opponentHandRef, i);
-            }
-            // setTimeout(() => toggleShuffleSound(), 200);
-        }
-    }, [gameStartState]); // Execute only once i.e. when game starts (thus dealing first six cards)
-
-    //*     MOVING CARDS    *//
-
-    // How many cards will be expanded on hover
-    const numberOfCardInExpand = 2;
-
-    // The value of expanding
-    const expandingValue = handFlow.player < CARDS_WITHOUT_SQUEEZING ? 1.62 : 2;
+    /************************************\
+    *              SECTION 3             *
+    **************************************
+    *    Handling hover on card event    *
+    \************************************/
 
     const handleCardMouseOver = (e: React.MouseEvent<HTMLDivElement>, cardIndex: number) => {
-        if (!(cardIndex && isCardInPlayerHand(cardIndex) && e.currentTarget && playerCanMove && !roundEnd.current))
-            return;
+        if (!(cardIndex && isCardInPlayerHand(cardIndex) && e.currentTarget && playerCanMove && !roundEndState)) return;
 
-        const upOnHover = e.currentTarget.classList.contains("card-active") ? "-50%" : "-60%";
-
-        e.currentTarget.style.transform = `translate3d(calc(${cardsRawTranslateX[cardIndex].per} + ${cardsRawTranslateX[cardIndex].num}px), ${upOnHover}, 0)`;
+        e.currentTarget.style.transform = `translate3d(calc(${cardsRawTranslateX[cardIndex].per} + ${cardsRawTranslateX[cardIndex].num}px), ${handFlow.player >= CARDS_WITHOUT_SQUEEZING ? "-70%" : "-60%"}, 0)`;
         e.currentTarget.style.cursor = "grab";
-
-        const _cardIdxInHand = holder.player.indexOf(cardIndex);
 
         // If current card is the edge one - skip the expanding
         if (holder.player.indexOf(cardIndex) === holder.player.length - 1) return;
 
-        //* EXPAND CARDS ON HOVER *//
-
-        let lLeap = 0;
-
-        // Expands left hand side
-        for (
-            let i = _cardIdxInHand - 1, e = expandingValue;
-            i >= _cardIdxInHand - numberOfCardInExpand - lLeap && lLeap < 2;
-            i--, e++
-        ) {
-            const currentCardIdx = holder.player[i];
-            const card = stockCardsRefs.current[currentCardIdx];
-            if (!card) {
-                lLeap++;
-                continue;
-            }
-
-            card.style.transform = `translate3d(calc(${cardsRawTranslateX[currentCardIdx].per} + ${
-                cardsRawTranslateX[currentCardIdx].num
-            }px - ${card.offsetWidth / 2 ** (e - lLeap)}px), -50%, 0)`;
-        }
-
-        let rLeap = 0;
-
-        // Expands right hand side
-        for (
-            let i = _cardIdxInHand + 1, e = expandingValue;
-            i <= _cardIdxInHand + numberOfCardInExpand + rLeap && rLeap < 2;
-            i++, e++
-        ) {
-            const currentCardIdx = holder.player[i];
-            const card = stockCardsRefs.current[currentCardIdx];
-            if (!card) {
-                rLeap++;
-                continue;
-            }
-
-            card.style.transform = `translate3d(calc(${cardsRawTranslateX[currentCardIdx].per} + ${
-                cardsRawTranslateX[currentCardIdx].num
-            }px + ${card.offsetWidth / 2 ** (e - rLeap)}px), -50%, 0)`;
-        }
+        expandCards(stockCardsRefs, cardIndex, holder.player, cardsRawTranslateX);
     };
-
-    // Set default cursor for all the player's cards when player cannot move them
-    useEffect(() => {
-        if (!playerCanMove) {
-            holder.player.forEach((cardIdx) => {
-                const card = stockCardsRefs.current[cardIdx];
-                card.style.cursor = "default";
-            });
-        }
-    }, [playerCanMove]);
 
     const handleCardMouseOut = (e: React.MouseEvent<HTMLDivElement>, cardIndex: number) => {
         if (!(cardIndex && isCardInPlayerHand(cardIndex) && e.currentTarget)) return;
 
         e.currentTarget.style.transform = `translate3d(calc(${cardsRawTranslateX[cardIndex].per} + ${cardsRawTranslateX[cardIndex].num}px), -50%, 0)`;
-
-        const _cardIdxInHand = holder.player.indexOf(cardIndex);
+        // ... here we don't need to reset cursor since it is reset automatically when player can't move
 
         // If current card is the edge one - skip the constriction
         if (holder.player.indexOf(cardIndex) === holder.player.length - 1) return;
 
-        let lLeap = 0;
-
-        // Reset expanding of the left hand side
-        for (
-            let i = _cardIdxInHand - 1, e = expandingValue;
-            i >= _cardIdxInHand - numberOfCardInExpand - lLeap && lLeap < 2;
-            i--, e++
-        ) {
-            const currentCardIdx = holder.player[i];
-            const card = stockCardsRefs.current[currentCardIdx];
-            if (!card) {
-                lLeap++;
-                continue;
-            }
-
-            card.style.transform = `translate3d(calc(${cardsRawTranslateX[holder.player[i]].per} + ${
-                cardsRawTranslateX[holder.player[i]].num
-            }px), -50%, 0)`;
-        }
-
-        let rLeap = 0;
-
-        // Reset expanding of the right hand side
-        for (
-            let i = _cardIdxInHand + 1, e = expandingValue;
-            i <= _cardIdxInHand + numberOfCardInExpand + rLeap && rLeap < 2;
-            i++, e++
-        ) {
-            const currentCardIdx = holder.player[i];
-            const card = stockCardsRefs.current[currentCardIdx];
-            if (!card) {
-                rLeap++;
-                continue;
-            }
-
-            card.style.transform = `translate3d(calc(${cardsRawTranslateX[holder.player[i]].per} + ${
-                cardsRawTranslateX[holder.player[i]].num
-            }px), -50%, 0)`;
-        }
+        resetExpandCards(stockCardsRefs, cardIndex, holder.player, cardsRawTranslateX);
     };
 
-    interface ICardMoveState {
-        cardIndex: number | null;
-        mouse: number[];
-        initialPos: {
-            top: string | null;
-            left: string | null;
-        };
-        playerHandOrigin: boolean;
-        isPressed: boolean;
-    }
+    /************************************\
+    *              SECTION 4             *
+    **************************************
+    * Handling click/press on card event *
+    \************************************/
 
-    const [cardMoveState, setCardMoveState] = useState<ICardMoveState>({
-        cardIndex: null,
-        mouse: [0, 0],
-        initialPos: {
-            top: null,
-            left: null,
-        },
-        playerHandOrigin: true,
-        isPressed: false,
-    });
+     // Set `false` to prevent from triggering mouseUp handler, when card cannot be played
+    const canHandleMouseUp = useRef(true);
+    const handleCardMouseDown = (cardIndex: number) => {
+        // Check if the clicked card is player's one, player can move and round is not over yet
+        if (!(isCardInPlayerHand(cardIndex) && playerCanMove && !roundEndState)) return;
 
-    const handleCardMouseDown = ([clientX, clientY]: [number, number], cardIndex: number) => {
-        // Check if the clicked card is player's one and there is no card in a deal
-        if (!(isCardInPlayerHand(cardIndex) && !dealingCard && playerCanMove && !roundEnd.current)) return;
+        // Reset to true from previous update to be able to handle the mouseUp if check above fails
+        canHandleMouseUp.current = true;
 
-        const currentCard = stockCardsRefs.current[cardIndex];
+        // When the stock is empty, according to the rules, we must oppose the card with the same suit as opponent's one
+        if (!stockFlow.current && batchDealer === "opponent" && typeof opponentDealtCardIdx.current === "number") {
+            if (deck[cardIndex].suit === deck[opponentDealtCardIdx.current].suit) return;
+            // Prevent from handling mouseUp
+            canHandleMouseUp.current = false;
 
-        currentCard.classList.add("card-active");
-
-        setCardMoveState({
-            cardIndex: cardIndex,
-            mouse: [clientX, clientY],
-            initialPos: {
-                top: `${currentCard.offsetTop - 0.1}px`, // Seems like there is some sort of shift down when a card goes
-                left: `${currentCard.offsetLeft}px`, // back, so i decided to move it 0.1px up to correct that behavior
-            },
-            playerHandOrigin: isCardInPlayerHand(cardIndex),
-            isPressed: true,
-        });
-    };
-
-    const showIncompatibleSuitMsg = useRef(false);
-    const [showOpponentNoCard, setShowOpponentNoCard] = useState(false);
-    const [showPlayerNoCard, setShowPlayerNoCard] = useState(false);
-
-    useEffect(() => {
-        const handleCardMouseMove = ({ clientX, clientY }: { clientX: number; clientY: number }) => {
-            // Prevent from handling a card move if the card is in the deal area
-            if (dealingCard) return;
-
-            const {
-                cardIndex,
-                mouse: [x, y],
-            } = cardMoveState;
-
-            if (!cardIndex) return;
-
-            const topOffset = y - clientY,
-                leftOffset = x - clientX;
-
-            setCardMoveState((prevState) => ({
-                ...prevState,
-                mouse: [clientX, clientY],
-            }));
-
-            // TODO: activate
-            opponentDealRef.current?.classList.add("deal-active");
-
-            const currentCard = stockCardsRefs.current[cardIndex];
-            const playerDeal = playerDealRef.current;
-            const playArea = playAreaRef.current;
-            const gameInterfaceScreen = gameInterfaceScreenRef.current;
-
-            if (!(currentCard && playerDeal && playArea && gameInterfaceScreen)) return;
-
-            const playerDealTop = playerDeal.getBoundingClientRect().top,
-                gameInterfaceTop = gameInterfaceScreen.getBoundingClientRect().top;
-
-            // Minimal bounds of the play area, defined as left and top sides
-            const minBoundX = playArea.offsetLeft + currentCard.offsetWidth / 2,
-                minBoundY = playArea.offsetTop + currentCard.offsetHeight / 2 - gameInterfaceTop;
-
-            // Maximal bounds of the play area, defined as tight and bottom sides
-            const maxBoundX = minBoundX + playArea.offsetWidth - currentCard.offsetWidth,
-                maxBoundY = minBoundY + playArea.offsetHeight - currentCard.offsetHeight;
-
-            // Calculate mouse left and top including play area bounds
-            const cardLeft = Math.max(minBoundX, Math.min(currentCard.offsetLeft - leftOffset, maxBoundX)),
-                cardTop = Math.max(minBoundY, Math.min(currentCard.offsetTop - topOffset, maxBoundY));
-
-            // When the stock is empty, according to the rules, we must oppose the card with the same suit as opponent's one
-            if (!stockFlow && batchDealer === "opponent" && typeof opponentDealtCardIdx.current === "number") {
-                if (deck[cardIndex].suit !== deck[opponentDealtCardIdx.current].suit) {
-                    playerDealRef.current?.classList.add("deal-active");
-                    showIncompatibleSuitMsg.current = true;
-                }
-            }
-
-            // When card enters a dealing area (with offset of 50px), place it inside the area
-            if (detectCollision(currentCard, playerDeal, 25) && !showIncompatibleSuitMsg.current) {
-                // setSideTurn("opponent");
-
-                setPlayerCanMove(false);
-
-                setDealingCard({
-                    idx: cardIndex!,
-                    idxInHand: holder.player.indexOf(cardIndex),
-                    origin: "player",
-                });
-
-                // Set the number of cards in hand flow to one less to keep the original hand length
-                setHandFlow((prevState) => ({
-                    ...prevState,
-                    player: prevState.player - 1,
-                }));
-
-                if (batchDealer === "opponent") setPlayerMovedOnOpponentBatch(true);
-
-                handleCardMouseUp();
-
-                currentCard.style.transform = `translate3d(-50%, -50%, 0)`;
-
-                // Place card int the center of the player deal area
-                currentCard.style.top = `${playerDealTop - gameInterfaceTop + playerDeal.offsetHeight / 2}px`;
-                currentCard.style.left = `${playerDeal.offsetLeft + playerDeal.offsetWidth / 2}px`;
-
-                return;
-            }
-
-            // Return `true` is cursor is gone out of left or right bounds
-            function detectMouseOutX() {
-                if (!playArea) return;
-                return clientX < playArea.offsetLeft || clientX > playArea.offsetLeft + playArea.offsetWidth;
-            }
-
-            // Return `true` is cursor is gone out of top or bottom bounds
-            function detectMouseOutY() {
-                if (!playArea) return;
-                return clientY < playArea.offsetTop || clientY > playArea.offsetTop + playArea.offsetHeight;
-            }
-
-            // Check if the cursor is inside play area
-            function detectMouseInside(offset: number = 20) {
-                if (!playArea) return;
-                return !(
-                    clientY < playArea.offsetTop + offset ||
-                    clientY > playArea.offsetTop + playArea.offsetHeight - offset ||
-                    clientX < playArea.offsetLeft + offset ||
-                    clientX > playArea.offsetLeft + playArea.offsetWidth - offset
-                );
-            }
-
-            // When the cursor goes out of left / right bounds, card moves only up / down
-            if (detectMouseOutX()) return (currentCard.style.top = `${cardTop}px`);
-
-            // When the cursor goes out of top / left bounds, card moves only left / right
-            if (detectMouseOutY()) return (currentCard.style.left = `${cardLeft}px`);
-
-            // Detect when the cursor is fully inside the play area
-            if (detectMouseInside(Math.floor(currentCard.offsetWidth / 4))) {
-                // If the cursor is not within the card, we move card to cursor's position
-                if (!detectCollision({ x: clientX, y: clientY }, currentCard)) {
-                    currentCard.style.top = `${clientY}px`;
-                    currentCard.style.left = `${clientX}px`;
-                    return;
-                }
-
-                // else just move normally the card
-                currentCard.style.top = `${cardTop}px`;
-                currentCard.style.left = `${cardLeft}px`;
-            }
-        };
-
-        const handleCardMouseUp = () => {
-            const { cardIndex } = cardMoveState;
-            if (!cardIndex) return;
-
-            const currentCard = stockCardsRefs.current[cardIndex];
-
-            currentCard.classList.remove("card-active");
-
-            showIncompatibleSuitMsg.current = false;
-
-            // TODO: activate
-            opponentDealRef.current?.classList.remove("deal-active");
-            playerDealRef.current?.classList.remove("deal-active");
-
-            currentCard.style.top = cardMoveState.initialPos.top!;
-            currentCard.style.left = cardMoveState.initialPos.left!;
-
-            setCardMoveState((prevState) => ({
-                ...prevState,
-                initialPos: {
-                    top: null,
-                    left: null,
-                },
-                isPressed: false,
-            }));
-        };
-
-        if (!(window && cardMoveState.isPressed)) return;
-        window.addEventListener("mousemove", handleCardMouseMove);
-        window.addEventListener("mouseup", handleCardMouseUp);
-
-        return () => {
-            window.removeEventListener("mousemove", handleCardMouseMove);
-            window.removeEventListener("mouseup", handleCardMouseUp);
-        };
-    }, [cardMoveState, dealingCard]);
-
-    const isCardInPlayerHand = (cardKey: number) => {
-        return holder.player.includes(cardKey);
-    };
-
-    //*  PLAY  *//
-
-    const [playerMovedOnOpponentBatch, setPlayerMovedOnOpponentBatch] = useState<boolean>(false);
-
-    //* PLAYERS LAST MOVE
-    useEffect(() => {
-        if (!dealingCard && !(playerMovedOnOpponentBatch && batchDealer === "opponent")) return;
-
-        // Clean dealt cards, when player placed his card while opponent's batch
-        if (playerMovedOnOpponentBatch && batchDealer === "opponent") {
-            const timer = setTimeout(() => {
-                playerDealtCardIdx.current = null;
-                opponentDealtCardIdx.current = null;
-                setPlayerMovedOnOpponentBatch(false);
-                setDealingCard(null);
-            }, 4200);
-
-            timeouts.push(timer);
-
-            return () => clearTimeout(timer);
-        }
-    }, [playerMovedOnOpponentBatch]);
-
-    // Opponent makes first move, as he won previous batch
-    useEffect(() => {
-        if (batchDealer === "opponent") {
-            // Player cannot move while opponent is moving
-            setPlayerCanMove(false);
-
-            // Opponent places card into deal area
-            placeOpponentCardDeal(chooseFiringCard());
-
-            const timer = setTimeout(() => {
-                // Now, after the move is done, player can move
-                setPlayerCanMove(true);
-            }, cardOpposingDelay + 500);
-
-            timeouts.push(timer);
-
-            return () => clearTimeout(timer);
-        }
-    }, [batchDealer]);
-
-    //* OPPONENTS LAST MOVE
-    useEffect(() => {
-        if (!dealingCard) return; // To prevent first call
-
-        // If player while his batch has already made a move, opponent answers
-        if (batchDealer === "player" && dealingCard.origin === "player") {
-            // Player cannot move while opponent is moving
-            setPlayerCanMove(false);
-
-            // Opponent places card into deal area
-            placeOpponentCardDeal(chooseOpposingCard(dealingCard.idx));
-
-            // Cleaning: fires after the batch winner was determined and cards placed into the corresponding hand
-            const timer = setTimeout(() => {
-                playerDealtCardIdx.current = null;
-                opponentDealtCardIdx.current = null;
-            }, 4200);
-
-            timeouts.push(timer);
-
-            return () => clearTimeout(timer);
-        }
-    }, [dealingCard]);
-
-    useEffect(() => {
-        if (!batchDealer) return;
-        if (batchDealer === "player") {
-            console.log("👉 Now is player's batch");
+            // If suits are not the same, show corresponding message
+            setShowIncompatibleSuitMsg(true);
+            setTimeout(() => setShowIncompatibleSuitMsg(false), ALERT_VISIBLE_TIME);
             return;
         }
-        console.log("👉 Now is opponent's batch");
-    }, [batchDealer]);
+    };
 
-    // Find a card in a hand with minimal rank
-    function cardWithMinimalRank(hand: number[]) {
-        let [minRankCard, minRankCardIdx] = [15, -1]; // 15 since there is no card higher than 14
-        hand.forEach((cardIdx) => {
-            if (normalizedRank(deck[cardIdx].rank) < minRankCard) {
-                minRankCard = normalizedRank(deck[cardIdx].rank);
-                minRankCardIdx = cardIdx;
-            }
+    const handleCardMouseUp = (cardIndex: number) => {
+        // Check if the clicked card is player's one, player can move, round is not over yet and
+        if (!(isCardInPlayerHand(cardIndex) && playerCanMove && !roundEndState && canHandleMouseUp.current)) return;
+        (document.activeElement as HTMLElement)?.blur(); // when executing from keyPress event, remove focus from card
+
+        const card = stockCardsRefs.current[cardIndex];
+        const playerDeal = playerDealRef.current;
+        const playArea = playAreaRef.current;
+        const gameInterfaceScreen = gameInterfaceScreenRef.current;
+
+        if (!(card && playerDeal && playArea && gameInterfaceScreen)) return;
+
+        const playerDealTop = playerDeal.getBoundingClientRect().top,
+            gameInterfaceTop = gameInterfaceScreen.getBoundingClientRect().top;
+
+        setPlayerCanMove(false);
+
+        // Set the number of cards in hand flow to one less to keep the original hand length
+        setHandFlow((prevState) => ({
+            ...prevState,
+            player: prevState.player - 1,
+        }));
+
+        setDealingCard({
+            idx: cardIndex!,
+            idxInHand: holder.player.indexOf(cardIndex),
+            origin: "player",
         });
 
-        return minRankCardIdx;
+        // Place card in the center of the player deal area
+        card.style.top = `${playerDealTop - gameInterfaceTop + playerDeal.offsetHeight / 2}px`;
+        card.style.left = `${playerDeal.offsetLeft + playerDeal.offsetWidth / 2}px`;
+        card.style.transform = `translate3d(-50%, -50%, 0)`;
+
+        setTimeout(() => playFlipSound(), CARD_FLIP_SOUND_DELAY); // Play flip sound with defined delay
+    };
+
+    // The first time a focused card is keyPressed, we extend the adjacent cards (for better observability),
+    // and the second time that card is keyPressed, we put it into deal area. But if after the first time press
+    // focus move onto the next (or prev) card, we should again expand cards and not put that card into the deal.
+    // To create that behavior, each time when a focused card is keyPressed, we store its index in `cardWasPressedOnce`
+    // and set `wasPressed` to true. And then if that same card is pressed again, we see that it was pressed once, so
+    // we place the card into the deal area. And if the focus moves on, we reset `cardWasPressedOnce` with a new focused card.
+    const cardWasPressedOnce = useRef({ idx: -1, wasPressed: false });
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>, cardIndex: number) => {
+        if (!(e.key === "Enter" || e.key === " ")) return;
+
+        // Expand cards on keyPress
+        resetExpandCards(stockCardsRefs, cardWasPressedOnce.current.idx, holder.player, cardsRawTranslateX);
+
+        // Check wether current card is the card, that was pressed previously and if so, place it
+        // into the deal area. Else (this is another card) - store a new card and expand adjacent cards.
+        if (!(cardWasPressedOnce.current.idx === cardIndex && cardWasPressedOnce.current.wasPressed)) {
+            cardWasPressedOnce.current = { idx: cardIndex, wasPressed: true };
+            expandCards(stockCardsRefs, cardIndex, holder.player, cardsRawTranslateX);
+            return;
+        }
+
+        cardWasPressedOnce.current = { idx: cardIndex, wasPressed: false };
+        handleCardMouseUp(cardIndex);
     }
 
-    // Choose a card from an opponent's hand to place first
-    const chooseFiringCard = () => {
-        const handCards = holder.opponent;
+    /************************************\
+    *              SECTION 5             *
+    **************************************
+    *      Opponent's decision making    *
+    \************************************/
 
-        // If the number of 7 in hand is at least 2, we can return 7. Otherwise no.
-        function shouldIncludeSeven() {
-            return handCards.filter((card) => deck[card].rank === 7).length > 1 ? true : false;
-        }
+    function addCardsFromStock() {
+        if (!stockFlow.current) return;
 
-        // If player's card is bigger than any available card, return unnecessary card: 8, 9
-        const unnecessaryCards = handCards.filter(
-            (cardIdx) =>
-                (normalizedRank(deck[cardIdx].rank) > 7 || shouldIncludeSeven()) &&
-                normalizedRank(deck[cardIdx].rank) < 10
-        );
+        const timer = setTimeout(() => {
+            // There is no change that stock would have odd number of cards, but still to be sure no errors
+            // occur, check that stock has cards to move for each hand
+            if (stockFlow.current) placeCardIntoHand(stockCardsRefs, playerHandRef, holder.stock[holder.stock.length - 1]);
+            if (stockFlow.current) placeCardIntoHand(stockCardsRefs, opponentHandRef, holder.stock[holder.stock.length - 1]);
+        }, ADD_CARDS_FROM_STOCK_DELAY);
 
-        // If there is unnecessary cards, return minimal of them
-        if (unnecessaryCards.length) {
-            return cardWithMinimalRank(unnecessaryCards);
-        }
-
-        // Else return a card with lowest rank
-        return cardWithMinimalRank(handCards);
-    };
-
-    // Choose the card number in opponent's hand, to answer the player
-    const chooseOpposingCard = (playerCardIdx: number) => {
-        const playerCard = deck[playerCardIdx];
-        const handCards = holder.opponent;
-
-        // Find all cards, that can beat player's one: the card should be the same suit, but bigger in rank
-        const possibleBeatingCardsIdc = handCards.filter(
-            (cardIdx) =>
-                deck[cardIdx].suit === playerCard.suit &&
-                normalizedRank(deck[cardIdx].rank) > normalizedRank(playerCard.rank)
-        );
-        if (possibleBeatingCardsIdc.length) {
-            console.log("beating card");
-            return _.choice(possibleBeatingCardsIdc);
-        }
-
-        // If the number of 7 in hand is at least 2, we can return 7. Otherwise no.
-        function shouldIncludeSeven() {
-            return handCards.filter((card) => deck[card].rank === 7).length > 1;
-        }
-
-        // If player's card is bigger than any available card, return random unnecessary card: 8, 9
-        const unnecessaryCards = handCards.filter((cardIdx) =>
-            (normalizedRank(deck[cardIdx].rank) > 7 || shouldIncludeSeven()) &&
-            normalizedRank(deck[cardIdx].rank) < 10 &&
-            stockFlow
-                ? 1
-                : deck[cardIdx].suit === playerCard.suit
-        );
-        if (unnecessaryCards.length) {
-            console.log(stockFlow);
-            return _.choice(unnecessaryCards);
-        }
-
-        // else return the lowest in rank card
-        return stockFlow ? cardWithMinimalRank(handCards) : NO_CARD_AVAILABLE;
-    };
+        timeouts.push(timer);
+    }
 
     const placeOpponentCardDeal = (cardIdx: number) => {
         if (cardIdx === NO_CARD_AVAILABLE) {
@@ -913,44 +646,74 @@ const GameInterface: React.FC = () => {
         }
 
         const timer = setTimeout(() => {
-            card.style.top = `${opponentDealTop - gameInterfaceTop + opponentDeal.offsetHeight / 2}px`;
-            card.style.left = `${opponentDeal.offsetLeft + opponentDeal.offsetWidth / 2}px`;
-
             // Remove one card from hand flow to keep original hand length
             setHandFlow((prevState) => ({
                 ...prevState,
                 opponent: prevState.opponent - 1,
             }));
 
-            // Squeeze cards in hand
             setDealingCard({
                 idx: cardIdx,
                 idxInHand: holder.opponent.indexOf(cardIdx),
                 origin: "opponent",
             });
 
-            card.style.transform = `translate3d(-50%, -50%, 0)`;
-
-            // Enable dragging
             setDealingCard(null);
+
+            // Place card in the center of the opponent deal area
+            card.style.transform = `translate3d(-50%, -50%, 0)`;
+            card.style.top = `${opponentDealTop - gameInterfaceTop + opponentDeal.offsetHeight / 2}px`;
+            card.style.left = `${opponentDeal.offsetLeft + opponentDeal.offsetWidth / 2}px`;
+
+            setTimeout(() => playFlipSound(), CARD_FLIP_SOUND_DELAY); // Play flip sound with defined delay
         }, cardOpposingDelay);
 
         timeouts.push(timer);
     };
 
-    function addCardsFromStock() {
-        if (!stockFlow) return;
+    /* Opponent's first move: either he starts game or won previous batch and starts current one */
+    useEffect(() => {
+        if (batchDealer === "opponent" && cardsAreDealt) {
+            // Player cannot move while opponent is moving
+            setPlayerCanMove(false);
 
-        const timer = setTimeout(() => {
-            placeCardIntoHand(stockCardsRefs, playerHandRef, holder.stock[holder.stock.length - 1]);
-            placeCardIntoHand(stockCardsRefs, opponentHandRef, holder.stock[holder.stock.length - 1]);
-        }, 1200);
+            // Opponent plays card
+            placeOpponentCardDeal(choosePlayingCard(holder.opponent, deck));
 
-        timeouts.push(timer);
-    }
+            const timer = setTimeout(() => {
+                // Now, after the move is done (with delay of 0.5s), player can move
+                setPlayerCanMove(true);
+            }, cardOpposingDelay + 1000); // add 1s to prevent player from moving immediately after opponent's moved
+
+            timeouts.push(timer);
+
+            return () => clearTimeout(timer);
+        }
+    }, [batchDealer, cardsAreDealt]);
+
+    /* Opponent's last move: when player has already mode a move, opponent answers */
+    useEffect(() => {
+        if (!dealingCard) return; // To prevent first call
+
+        if (batchDealer === "player" && dealingCard.origin === "player") {
+            // Player cannot move while opponent is moving
+            setPlayerCanMove(false);
+
+            // Opponent places card into deal area
+            const opposingCard = chooseOpposingCard(dealingCard.idx, holder.opponent, deck, stockFlow.current)
+            placeOpponentCardDeal(opposingCard);
+        }
+    }, [dealingCard]);
+
+    /************************************\
+    *              SECTION 6             *
+    **************************************
+    *         Choosing winning side      *
+    \************************************/
 
     // When both sides put their cards, decide which one win and move cards to the corresponding hand
     useEffect(() => {
+        if (!dealingCard) return;
         if (
             !(
                 typeof playerDealtCardIdx.current === "number" &&
@@ -958,7 +721,7 @@ const GameInterface: React.FC = () => {
                 !showPlayerNoCard
             )
         )
-            return console.log("Dealt cards:", playerDealtCardIdx.current, opponentDealtCardIdx.current);
+            return;
 
         const playerCard = deck[playerDealtCardIdx.current],
             opponentCard = deck[opponentDealtCardIdx.current];
@@ -974,28 +737,33 @@ const GameInterface: React.FC = () => {
                 card.classList.remove("winning-card");
 
                 placeCardIntoHand(stockCardsRefs, winningHand, playerDealtCardIdx.current!, false);
-                const timer1 = setTimeout(() => {
-                    placeCardIntoHand(stockCardsRefs, winningHand, opponentDealtCardIdx.current!, false);
-                }, 0); // FIX: some sort of delay to be sure that when cards are squeezing (i.e. when hand overflow), the previous
+                // FIX?: some sort of delay to be sure that when cards are squeezing (i.e. when hand overflow), the previous
                 // card placed in a hand is already squeezed, since we reference the last card that is squeezed
+                const timer1 = setTimeout(() => placeCardIntoHand(stockCardsRefs, winningHand, opponentDealtCardIdx.current!, false), 0);
 
                 addCardsFromStock();
+
                 const timer2 = setTimeout(() => {
                     setBatchDealer(null);
                     setBatchDealer(side);
-                    setPlayerCanMove(side === "player");
-                }, 1500);
+                    setPlayerCanMove(side === "player"); // if player won prev batch, he moves first next one
+                    playerDealtCardIdx.current = null;
+                    opponentDealtCardIdx.current = null;
+                }, DEFINE_WINNING_SIDE_CLEARING);
 
                 timeouts.push(timer1);
                 timeouts.push(timer2);
-            }, 2500);
+            }, CARDS_IN_DEAL_DURATION);
 
             timeouts.push(timer);
         }
 
         if (batchDealer === "player") {
             if (playerCard.suit === opponentCard.suit) {
-                if (normalizedRank(playerCard.rank) > normalizedRank(opponentCard.rank)) {
+                if (
+                    (normalizedRank(playerCard.rank) > normalizedRank(opponentCard.rank)) &&
+                    !(playerCard.rank === "ace" && opponentCard.rank === 7)
+                ) {
                     /// Player wins
                     defineWinningSide("player");
                     return;
@@ -1011,7 +779,10 @@ const GameInterface: React.FC = () => {
 
         if (batchDealer === "opponent") {
             if (opponentCard.suit === playerCard.suit) {
-                if (normalizedRank(opponentCard.rank) > normalizedRank(playerCard.rank)) {
+                if (
+                    (normalizedRank(opponentCard.rank) > normalizedRank(playerCard.rank)) &&
+                    !(opponentCard.rank === "ace" && playerCard.rank === 7)
+                ) {
                     /// Opponent wins
                     defineWinningSide("opponent");
                     return;
@@ -1024,12 +795,19 @@ const GameInterface: React.FC = () => {
             defineWinningSide("opponent");
             return;
         }
-    }, [playerDealtCardIdx.current, opponentDealtCardIdx.current]);
+    }, [dealingCard]);
+
+    /************************************\
+    *              SECTION 7             *
+    **************************************
+    *               Round end            *
+    \************************************/
 
     // Check if there are cards in player's hand to answer the opponent. If there are no cards,
     // announce the end of the round and start counting points
     useEffect(() => {
-        if (!(!stockFlow && dealingCard && batchDealer === "opponent")) return;
+        // Crucial condition: card, that triggers this effect must be from opponent on his batch
+        if (!(!stockFlow.current && dealingCard && dealingCard.origin === "opponent" && batchDealer === "opponent")) return;
 
         const playerCards = holder.player;
         let cardToAnswer = 0;
@@ -1045,8 +823,7 @@ const GameInterface: React.FC = () => {
         if (!cardToAnswer) {
             setShowPlayerNoCard(true);
 
-            // TODO: same thing for player's card & hand
-            // since opponent have already put his card into a deal and the round has ended,
+            // Since opponent have already put his card into the deal and the round has ended,
             // we put the card's index back to his hand to include it into honor counting
             holder.opponent.push(dealingCard.idx);
         }
@@ -1055,7 +832,7 @@ const GameInterface: React.FC = () => {
     // Additional styling to indicate that there are no cards in player's hand to answer the opponent
     useEffect(() => {
         if (showPlayerNoCard) {
-            roundEnd.current = true;
+            setRoundEndState(true);
             holder.player.forEach((card) => {
                 stockCardsRefs.current[card].style.filter = "brightness(0.8) grayscale(0.8)";
             });
@@ -1065,17 +842,23 @@ const GameInterface: React.FC = () => {
     // Additional styling to indicate that there are no cards in opponent's to answer the player
     useEffect(() => {
         if (showOpponentNoCard) {
-            roundEnd.current = true;
+            setRoundEndState(true);
             holder.opponent.forEach((card) => {
                 stockCardsRefs.current[card].style.filter = "brightness(0.8) grayscale(0.8)";
             });
         }
     }, [showOpponentNoCard]);
 
-    // After the round is over, wait 3500ms and show scoring window
-    const [showScoringWin, setShowScoringWin] = useState(false);
+    /************************************\
+    *              SECTION 8             *
+    **************************************
+    *            Display scoring         *
+    \************************************/
+
+    // After the round is over, show score board with delay
+    const [showScoreBoard, setShowScoreBoard] = useState(false);
     useEffect(() => {
-        if (roundEnd.current) {
+        if (roundEndState) {
             // When round is over and any card is in the deal, return in to the origin hand
             if (dealingCard) {
                 if (dealingCard.origin === "player") holder.player.push(dealingCard.idx);
@@ -1087,19 +870,19 @@ const GameInterface: React.FC = () => {
                 setShowPlayerNoCard(false);
                 setShowOpponentNoCard(false);
 
-                // Show scoring window
-                setShowScoringWin(true);
-            }, 3000);
+                // Show score board
+                setShowScoreBoard(true);
+            }, SHOW_SCORING_WIN_DELAY);
             timeouts.push(timer);
             return () => clearTimeout(timer);
         }
-    }, [roundEnd.current]);
+    }, [roundEndState]);
 
-    // After the point count window is showed (just starting point), we calculate the number of honors
+    // After the score board is showed (just starting point), we calculate the number of honors
     // in each hand, and save it into `roundHonors`, which will be passed to the scoring window
-    const [roundHonors, setRoundHonors] = useState<IHonors | null>();
+    const [roundHonors, setRoundHonors] = useState<IHonors | null>(null);
     useEffect(() => {
-        if (!showScoringWin) return;
+        if (!showScoreBoard) return;
 
         const playerCards = holder.player,
             opponentCards = holder.opponent;
@@ -1127,7 +910,13 @@ const GameInterface: React.FC = () => {
             player: Object.fromEntries(totalHonors.player),
             opponent: Object.fromEntries(totalHonors.opponent),
         });
-    }, [showScoringWin]);
+    }, [showScoreBoard]);
+
+    /************************************\
+    *              SECTION 9             *
+    **************************************
+    *             Game reset             *
+    \************************************/
 
     // Reset all internal states when setting up a new game
     useEffect(() => {
@@ -1137,8 +926,14 @@ const GameInterface: React.FC = () => {
 
         setGameStartState((prevState) => !prevState);
 
+        // Regenerate a new deck
+        deck = Deck.createDeck();
+
         // Clear all timeouts fired before
         timeouts.forEach((t) => clearTimeout(t));
+        timeouts.length = 0;
+
+        for (const t in cardsRawTranslateX) delete cardsRawTranslateX[t];
 
         // Append animations
         gameInterfaceScreenRef.current.classList.add("GameInterface--in-animation");
@@ -1153,36 +948,28 @@ const GameInterface: React.FC = () => {
             card.style.zIndex = `${idx}`;
         });
 
-        // Regenerate a new deck
-        deck = Deck.createDeck();
+        // Reset shirts
+        setShirtStates(deck.map(() => true));
 
         // Reset holder
         holder.stock = [...Array(CARDS_IN_DECK + 1).keys()];
         holder.player.length = 0;
         holder.opponent.length = 0;
 
+        stockFlow.current = holder.stock.length;
+
+        // Reset stylings that could be applied due to absent of cards to answer
         holder.stock.forEach((card) => {
             stockCardsRefs.current[card].style.filter = "";
         });
 
-        // Update all cards to be facedown: isShirt={true}
-        setShirtStates((prevStates) => prevStates.fill(true));
-
-        roundEnd.current = false;
-
-        setShirtStates(deck.map(() => true));
-
         // Reset to null to be sure that any card (that was in a deal) is movable again
         setDealingCard(null);
 
-        const defineBatchDealer = "player";
+        setCardsAreDealt(false);
 
+        const defineBatchDealer = _.randIntRange(0, 1) ? "player" : "opponent";
         setBatchDealer(defineBatchDealer);
-
-        playerDealtCardIdx.current = undefined;
-        opponentDealtCardIdx.current = undefined;
-
-        lastCardBy.current = undefined;
 
         setPlayerCanMove(defineBatchDealer === "player");
 
@@ -1191,68 +978,54 @@ const GameInterface: React.FC = () => {
             opponent: 0,
         });
 
+        lastCardBy.current = undefined;
+
+        setPlayerCanMove(defineBatchDealer === "player");
+
+        setShowPlayerNoCard(false);
+        setShowOpponentNoCard(false);
+        setShowIncompatibleSuitMsg(false);
+
+        setRoundEndState(false);
+
+        playerDealtCardIdx.current = undefined;
+        opponentDealtCardIdx.current = undefined;
+
         wasPlayerSqueezed.current = false;
         wasOpponentSqueezed.current = false;
 
-        setCardMoveState({
-            cardIndex: null,
-            mouse: [0, 0],
-            initialPos: {
-                top: null,
-                left: null,
-            },
-            playerHandOrigin: true,
-            isPressed: false,
-        });
+        canHandleMouseUp.current = true;
 
-        showIncompatibleSuitMsg.current = false;
+        cardWasPressedOnce.current = { idx: -1, wasPressed: false };
 
-        setShowOpponentNoCard(false);
-
-        setShowPlayerNoCard(false);
-
-        setPlayerMovedOnOpponentBatch(false);
-
-        setShowScoringWin(false);
+        setShowScoreBoard(false);
 
         setRoundHonors(null);
-
-        // Reset all the card moving properties
-        setCardMoveState({
-            cardIndex: null,
-            mouse: [0, 0],
-            initialPos: {
-                top: null,
-                left: null,
-            },
-            playerHandOrigin: true,
-            isPressed: false,
-        });
     }, [gameResetState]); // No need to include gameStartState as it would re-render the game start state
 
-    // When gameStartState set to true (i.e. the actual game has started), we start the timer. Otherwise reset it.
+    /************************************\
+    *             SECTION 10             *
+    **************************************
+    *       Storing session on quit      *
+    \************************************/
+
+    // When got storeSession signal (after a user confirmed quit button) - store `deck`, `holder` and `batchDealer` in
+    // redux store (the dispatch will be intercepted in SettingsMenu and the redux store will be written to the config)
     useEffect(() => {
-        if (gameStartState) {
-            console.log("fires in game interface");
-            setTimerState({
-                ...timerState,
-                start: true,
-                pause: false,
-                reset: false
+        if (storeSessionSignal) {
+            setProgress({
+                DECK: deck,
+                HOLDER: holder,
+                BATCH_DEALER: batchDealer,
             });
         }
-    }, [gameStartState]);
+    }, [storeSessionSignal]);
 
     return (
         <React.Fragment>
-            {showScoringWin && roundHonors && (
-                <Modal
-                    isOpen={true}
-                    toggleModal={() => {}}
-                    unclosable={true}
-                    disableScrollBar
-                >
-                    <Scoring honors={roundHonors!} handleNextRound={setGameResetState} />
+            {showScoreBoard && roundHonors && (
+                <Modal isOpen={true} toggle={() => {}} unclosable={true} disableScrollBar>
+                    <ScoreBoard honors={roundHonors!} handleNextRound={setGameResetState} />
                 </Modal>
             )}
             <div
@@ -1299,8 +1072,7 @@ const GameInterface: React.FC = () => {
                                         ? "0 -1px 2px rgb(0 0 0 / 5%)"
                                         : "0px 7px 29px 0px rgba(100, 100, 111, 0.3)"
                                 }
-                                // isShirt={shirtStates[i]}
-                                isShirt={false}
+                                isShirt={shirtStates[i]}
                                 cyrillic={lang === "ua"}
                                 className={`card-${i} absolute`}
                                 linkerRef={addToStockRefs}
@@ -1310,9 +1082,12 @@ const GameInterface: React.FC = () => {
                                     transform: "translate3d(-50%, -50%, 0)",
                                     zIndex: i,
                                 }}
+                                tabIndex={isCardInPlayerHand(i) ? 35 - i : -1}
                                 onMouseEnter={(e) => handleCardMouseOver(e, i)}
                                 onMouseLeave={(e) => handleCardMouseOut(e, i)}
-                                onMouseDown={(e) => handleCardMouseDown([e.clientX, e.clientY], i)}
+                                onMouseDown={() => handleCardMouseDown(i)}
+                                onMouseUp={() => handleCardMouseUp(i)}
+                                onKeyDown={(e) => handleKeyDown(e, i)}
                             />
                         );
                     })}
@@ -1328,7 +1103,7 @@ const GameInterface: React.FC = () => {
                         <StartBlinkingTitle elementRef={gameInterfaceScreenRef} shouldStartGame={setGameStartState} />
                     ) : (
                         <React.Fragment>
-                            <Alert isMounted={showIncompatibleSuitMsg.current} msg={`👉 ${t("pop-up.incomp-suits")}`} />
+                            <Alert isMounted={showIncompatibleSuitMsg} msg={`👉 ${t("pop-up.incomp-suits")}`} />
                             <Alert isMounted={showOpponentNoCard} msg={`${t("pop-up.opponent-no-card")}`} />
                             <Alert isMounted={showPlayerNoCard} msg={`${t("pop-up.player-no-card")}`} />
                             <div
@@ -1344,7 +1119,7 @@ const GameInterface: React.FC = () => {
                                         width: `${CARD_SIZE + 3}%`,
                                     }}
                                 >
-                                    {currentScore.opponent}
+                                    {sessionStats.CURRENT_SCORE.opponent}
                                 </h1>
                             </div>
                             <div
@@ -1361,17 +1136,7 @@ const GameInterface: React.FC = () => {
                                         borderRadius: cardLinkerAPI.cardBorderRadius,
                                     }}
                                     ref={opponentDealRef}
-                                    onClick={addCardToPlayerHand()}
                                 ></div>
-                                {/* {batchWinner.current && (
-                                <DoubleArrowIcon
-                                    className="WinningSideArrow absolute text-green-800 brightness-125 rotate-0"
-                                    sx={{
-                                        fontSize: "7vw",
-                                        transform: `rotate(${batchWinner.current === "player" ? "0" : "180"}deg)`,
-                                    }}
-                                />
-                            )} */}
                                 <div
                                     className="Deal-Player h-full ml-[6%]
                         border-[3px] md:border-4 xl:border-[6px] border-green-300 border-dashed"
@@ -1380,7 +1145,6 @@ const GameInterface: React.FC = () => {
                                         borderRadius: cardLinkerAPI.cardBorderRadius,
                                     }}
                                     ref={playerDealRef}
-                                    onClick={addCardToOpponentHand()}
                                 ></div>
                             </div>
                             <div
@@ -1392,7 +1156,7 @@ const GameInterface: React.FC = () => {
                             >
                                 <h1 className="absolute right-3 top-1/2 text-green-800 brightness-110">
                                     {t("game-interface.round-title")}
-                                    {roundStats.current}
+                                    {sessionStats.ROUND_STATS.current}
                                 </h1>
                                 <h1
                                     className="absolute left-0 text-center text-green-800 lg:text-5xl brightness-90"
@@ -1400,12 +1164,17 @@ const GameInterface: React.FC = () => {
                                         width: `${CARD_SIZE + 3}%`,
                                     }}
                                 >
-                                    {currentScore.player}
+                                    {sessionStats.CURRENT_SCORE.player}
                                 </h1>
                             </div>
                         </React.Fragment>
                     )}
-                    <PlayAreaSidebarButtons gameStartState={gameStartState} gameResetHandler={setGameResetState} />
+                    {useMemo(
+                        () => (
+                            <NewGameButton gameStartState={gameStartState} gameResetHandler={setGameResetState} />
+                        ),
+                        [gameStartState]
+                    )}
                 </div>
             </div>
         </React.Fragment>
