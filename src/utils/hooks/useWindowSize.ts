@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 
-import useEventListener from "./useEventListener";
-
 interface WindowSize {
     width: number;
     height: number;
@@ -13,18 +11,22 @@ const useWindowSize = (): WindowSize => {
         height: 0,
     });
 
-    const handleSize = () => {
-        setWindowSize({
-            width: window.innerWidth,
-            height: window.innerHeight,
-        });
-    };
-
-    useEventListener("resize", handleSize);
-
-    // Set size at the first load
     useEffect(() => {
-        handleSize();
+        const handleResize = () => {
+            // Set window width and height into state
+            setWindowSize({
+                width: window.innerWidth,
+                height: window.innerHeight,
+            });
+        };
+
+        window.addEventListener("resize", handleResize);
+
+        // Call handler right away so state gets updated with initial window size
+        handleResize();
+
+        // Remove event listener on cleanup
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
     return windowSize;

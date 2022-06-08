@@ -1,15 +1,12 @@
 import { readFileSync, writeFileSync } from "fs";
-import { resolve } from "path";
+import { isAbsolute, join, resolve } from "path";
 
-import { getByDotNotation, setByDotNotation } from "../dotNotation/index";
+import { DotNotation, createPlainObject } from "@utils/utils";
 import { ConfigOptions, Deserialize, Serialize } from "./types";
 
-// Creates a plain object of type T
-const createPlainObject = <T = unknown>(): T => {
-    return Object.create(null);
-};
+const { ipcRenderer } = require("electron");
 
-// Checks if a provided value can be stored in a json file
+// Check if a provided value can be stored in a json file
 const verifyValueType = (key: string, value: unknown): void => {
     const nonJsonTypes = new Set(["undefined", "symbol", "function"]);
 
@@ -22,26 +19,24 @@ const verifyValueType = (key: string, value: unknown): void => {
     }
 };
 
-class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
+export default class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
     readonly #options: Readonly<Partial<ConfigOptions<T>>>;
     readonly path: string;
     private store: T;
 
-    constructor(private configOptions: Readonly<Partial<ConfigOptions<T>>> = {}) {
-        // Default options with possible redefinitions
-        const options: Partial<ConfigOptions<T>> = {
-            configName: "config",
-            fileExtension: "json",
-            accessPropertiesByDotNotation: true,
-            configFileMode: 0o666,
-            ...configOptions,
-        };
+    constructor(private configOptions: Partial<ConfigOptions<T>> = {}) {
+        const defaultCwd = ipcRenderer.sendSync("store-get-app-data");
+
+        if (configOptions.cwd) {
+            configOptions.cwd = isAbsolute(configOptions.cwd) ? configOptions.cwd : join(defaultCwd, configOptions.cwd);
+        } else {
+            configOptions.cwd = defaultCwd;
+        }
 
         // Reserve options
-        this.#options = options;
+        this.#options = configOptions;
 
-        const fileExtension = options.fileExtension ? `.${options.fileExtension}` : "";
-        this.path = resolve(options.cwd!, `${options.configName}${fileExtension}`);
+        this.path = resolve(configOptions.cwd!, `${configOptions.configName}.json`);
 
         const confStore = this._parseConfigFile();
         this.store = confStore;
@@ -58,7 +53,7 @@ class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
     get<Key extends keyof T, Value = unknown>(key: Key, defaultValue?: Value): Value;
     get(key: string, defaultValue?: unknown): unknown {
         if (this.#options.accessPropertiesByDotNotation) {
-            return this._get(key, defaultValue);
+            return DotNotation.getByDotNotation(this.store, key as string, defaultValue);
         }
 
         const { store } = this;
@@ -85,7 +80,7 @@ class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
             verifyValueType(key, value);
 
             if (this.#options.accessPropertiesByDotNotation) {
-                setByDotNotation(store, key, value);
+                DotNotation.setByDotNotation(store, key, value);
             } else {
                 store[key as Key] = value as T[Key];
             }
@@ -123,8 +118,6 @@ class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
             const storeData = readFileSync(this.path, { encoding: "utf8", flag: "r" });
             const deserializedData = this._deserialize(storeData);
 
-            //* `deserializedStore` should be validated here *//
-
             return Object.assign(deserializedData, createPlainObject());
         } catch (error: any) {
             // If the file does not exist
@@ -148,14 +141,4 @@ class ConfigHandler<T extends Record<string, any> = Record<string, unknown>> {
 
     private _serialize: Serialize<T> = (value) => JSON.stringify(value, undefined, "  ");
     private _deserialize: Deserialize<T> = (textValue) => JSON.parse(textValue);
-
-    // Used in `get` method to get a value using dot notation
-    private _get<Key extends keyof T, Default = unknown>(
-        key: Key | string,
-        defaultValue?: Default
-    ): T | T[Key] | Default | null {
-        return getByDotNotation(this.store, key as string, defaultValue as T[Key]);
-    }
 }
-
-export default ConfigHandler;
