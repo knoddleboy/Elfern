@@ -39,14 +39,26 @@ const StartBlinkingTitle: React.FC<IStartBlinkingTitleProps> = ({ elementRef, sh
         const titleStateHandler = (e: MouseEvent | KeyboardEvent) => {
             const target = e.target as HTMLElement;
 
-            // TODO: remove e.key === "r"
-            if (
-                (e instanceof MouseEvent && target.closest(".PlayAreaSidebarButtons")) ||
-                (e instanceof KeyboardEvent &&
-                    (e.key === "Escape" || e.key === "Alt" || e.key === "Tab" || e.key === "Control" || e.key === "r")) ||
-                document.getElementById("modal-root")?.firstChild
-            )
-                return;
+            // Omit events occurred in .NewGameButton container
+            if (e instanceof MouseEvent && target.closest(".NewGameButton")) return;
+
+            if (e instanceof KeyboardEvent) {
+                // TODO: remove e.key === "r"
+                // Omit Escape, Alt and Tab keys. Also omit any event if there is at least one element
+                // in #modal-root (thus any dialog)
+                if (
+                    e.key === "Escape" ||
+                    e.key === "Alt" ||
+                    e.key === "Tab" ||
+                    e.key === "Control" ||
+                    e.key === "r" ||
+                    document.getElementById("modal-root")?.firstChild
+                )
+                    return;
+
+                // Omit Enter and Space keys when focused on a sidebar buttons to be able to interact with them
+                if ((e.key === "Enter" || e.key === " ") && target.closest(".Sidebar")) return;
+            }
 
             // If this is the first time after starting an application the user starts game, we ask him/her to
             // enter the number of rounds and we set isInitialSetup to false to indicate that first setup have
@@ -79,7 +91,7 @@ const StartBlinkingTitle: React.FC<IStartBlinkingTitleProps> = ({ elementRef, sh
                 <RoundsNumberSetterModal
                     isOpen={true}
                     size={`${width < 1024 ? "1/3" : "1/5"}`}
-                    toggleModal={setShowRoundSetter}
+                    toggle={setShowRoundSetter}
                     gameResetHandler={shouldStartGame}
                     showModalClose={false}
                     unclosable={true}
