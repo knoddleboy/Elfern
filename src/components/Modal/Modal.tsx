@@ -3,10 +3,8 @@ import React from "react";
 import SimpleBar from "simplebar-react";
 import "simplebar/dist/simplebar.min.css";
 
-import DialogWrapper from "@components/DialogWrapper";
+import DialogWrapper, { IDialogWrapper } from "@components/DialogWrapper";
 import ModalCloseButton from "./ModalCloseButton";
-
-import { ReactSetState } from "@src/types";
 
 import "./Modal.scss";
 
@@ -15,17 +13,22 @@ const md = require("markdown-it")({
     typographer: true,
 });
 
-export interface IModalProps {
-    children?: React.ReactNode;
+export interface IModal extends IDialogWrapper {
+    /** Modal window width. Calculated relatively the window size.
+     * @example
+     * size={"1/3"} -> modal width is 1/3 of window's width
+     */
     size?: `${number}/${number}`;
-    isOpen: boolean;
-    toggleModal: ReactSetState;
+
+    /** Set `true` to disable scrollbar */
     disableScrollBar?: boolean;
-    unclosable?: true;
-    sinkTimer?: boolean;
 }
 
-const ModalContent: React.FC<Pick<IModalProps, "children">> = ({ children }) => (
+/**
+ * Modal content. Moved to a separate component to render depending on wether scrollbar is enabled.
+ * NOTE: if the actual children is a string, then it is considered as a markdown content and is parsed to html
+ */
+const ModalContent: React.FC<Pick<IModal, "children">> = ({ children }) => (
     <>
         {typeof children === "string" ? (
             <React.Fragment>
@@ -35,31 +38,17 @@ const ModalContent: React.FC<Pick<IModalProps, "children">> = ({ children }) => 
                         __html: md.render(children),
                     }}
                 />
-                <ModalCloseButton className="w-full flex justify-center" />
+                <ModalCloseButton className="w-full p-1 flex justify-center" />
             </React.Fragment>
         ) : (
             children
         )}
     </>
 );
-//* TODO: extend from DialogWrapper
-const Modal: React.FC<IModalProps> = ({
-    children,
-    size,
-    isOpen,
-    toggleModal,
-    unclosable,
-    sinkTimer,
-    disableScrollBar = false,
-}) => {
+
+const Modal: React.FC<IModal> = ({ children, isOpen, size, toggle, unclosable, disableScrollBar = false }) => {
     return (
-        <DialogWrapper
-            isOpen={isOpen}
-            toggle={toggleModal}
-            centerContent={true}
-            unclosable={unclosable}
-            sinkTimer={sinkTimer}
-        >
+        <DialogWrapper isOpen={isOpen} toggle={toggle} centerContent={true} unclosable={unclosable}>
             <div
                 id="dialog"
                 className="modal-content absolute bg-white-normal p-4 rounded-xl"
