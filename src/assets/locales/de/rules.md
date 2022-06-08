@@ -14,7 +14,7 @@ Das Ziel des Spiels ist es, so viele Ehren wie möglich zu erzielen.
 
 > Das Minimum für den Gewinn beträgt 11 Ehren.
 
-Daher überprüfen die Spieler nach jeder Bestechung die Karten, die sie während des Deals gefangen haben.
+Daher überprüfen die Spieler nach jeder Bestechung die Karten, die sie während des Deals gefangen haben und zählen, wie viele Punkte sie verdient haben (siehe Wertung).
 
 ## Der Spielverlauf
 
