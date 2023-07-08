@@ -1,4 +1,4 @@
-# **Elfern**: Basics of Programming Coursework (2022) or Dumbest Game I've Ever Made
+# **Elfern**: Card Game
 
 <img src="metadata/preview.png" alt="preview" style="width:400px;"/>
 
